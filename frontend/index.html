@@ -700,14 +700,346 @@ document.getElementById('reg-form').addEventListener('submit',function(e){
 });
 
 /* ════════════════════════════════════════
-   EXPERIMENT LOADING
+   CHEMICAL COMBINATION REACTION DATABASE
+   Keys = sorted IDs joined by '+' 
+════════════════════════════════════════ */
+const chemReactions={
+  /* ── Two-chemical combos ── */
+  'HCl+NaOH':{
+    title:'⚗ Acid – Base Reaction',
+    formula:'HCl + NaOH → NaCl + H₂O',
+    sub:'Acid–Base Neutralization  |  Exothermic  |  pH → 7',
+    badge:'NEUTRALIZATION', badgeColor:'#a0f0c0',
+    overview:'HCl + NaOH → NaCl + H₂O\nNeutralization reaction. Salt and water are formed.',
+    chemNames:'• Hydrochloric Acid (HCl)\n• Sodium Hydroxide (NaOH)',
+    tools:'• Beaker  • Dropper  • Stirrer',
+    safety:'• Goggles  • Gloves  • Lab Coat',
+    requiredSafety:['Goggles','Gloves','Lab Coat'],
+    steps:['Take a clean beaker and place it on the table.','Measure 10 mL of HCl using the measuring cylinder.','Carefully pour HCl into the beaker.','Add NaOH slowly, drop by drop, using the dropper.','Stir the mixture gently with the glass rod.','Observe — heat is released (exothermic reaction).','Test with indicator: pH should be ≈ 7 (neutral).'],
+    effect:'bubbles', liquidColor:'#a0e8a0', bgColor:'#c8f0c8',
+    observation:'Solution becomes clear/neutral. Slight heat felt.'
+  },
+  'CuSO4+NaOH':{
+    title:'🔵 Precipitation Reaction',
+    formula:'CuSO₄ + 2NaOH → Cu(OH)₂↓ + Na₂SO₄',
+    sub:'Double Displacement  |  Blue precipitate  |  Cu(OH)₂ ↓',
+    badge:'PRECIPITATION', badgeColor:'#88ccff',
+    overview:'CuSO₄ + 2NaOH → Cu(OH)₂↓ + Na₂SO₄\nA pale blue precipitate of Cu(OH)₂ forms at the bottom.',
+    chemNames:'• Copper Sulfate (CuSO₄)\n• Sodium Hydroxide (NaOH)',
+    tools:'• Test Tube  • Dropper  • Stirrer',
+    safety:'• Goggles  • Gloves  • Lab Coat',
+    requiredSafety:['Goggles','Gloves','Lab Coat'],
+    steps:['Take a clean test tube.','Add 5 mL of CuSO₄ (blue) solution to the tube.','Slowly add NaOH using the dropper.','Observe the formation of a blue precipitate — Cu(OH)₂.','Allow precipitate to settle at the bottom.','Note: precipitate is gelatinous pale blue.','Record the color and amount of precipitate formed.'],
+    effect:'precipitate', liquidColor:'#4090d0', bgColor:'#a0c8f0',
+    observation:'Pale blue Cu(OH)₂ precipitate settles at bottom.'
+  },
+  'H2SO4+KMnO4':{
+    title:'🟣 Oxidation Reaction',
+    formula:'2KMnO₄ + H₂SO₄ → K₂SO₄ + 2MnSO₄ + H₂O',
+    sub:'Redox  |  KMnO₄ = strong oxidizer  |  Deep purple — TOXIC FUMES',
+    badge:'OXIDATION', badgeColor:'#e0aaff',
+    overview:'2KMnO₄ + H₂SO₄ → K₂SO₄ + Mn²⁺ + H₂O\nKMnO₄ is a strong oxidizing agent. Deep purple color and toxic fumes.',
+    chemNames:'• Potassium Permanganate (KMnO₄)\n• Sulfuric Acid (H₂SO₄)',
+    tools:'• Beaker  • Measuring Cylinder  • Burner',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Face Shield  • Fume Hood',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Face Shield','Fume Hood'],
+    steps:['Wear all PPE — goggles, gloves, face shield, lab coat.','Ensure fume hood is running before starting.','Add dilute H₂SO₄ into the beaker (10 mL).','Dissolve KMnO₄ crystals in 20 mL of water separately.','Slowly pour KMnO₄ solution into the acid.','Observe the deep purple-brown color change.','Record all color changes and temperature readings.'],
+    effect:'smoke', liquidColor:'#8010a0', bgColor:'#d090e8',
+    observation:'Deep purple solution. Toxic fumes released — fume hood required!'
+  },
+  'HCl+H2SO4':{
+    title:'⚠️ Strong Acid Mixture',
+    formula:'HCl + H₂SO₄ → H₃O⁺ + HSO₄⁻  (mixed acid)',
+    sub:'Highly corrosive acid mix  |  Fumes released  |  DANGER',
+    badge:'ACID MIX ⚠️', badgeColor:'#ffe080',
+    overview:'HCl + H₂SO₄ → Highly corrosive mixed acid solution.\nExtremely dangerous — fumes released, avoid skin contact.',
+    chemNames:'• Hydrochloric Acid (HCl)\n• Sulfuric Acid (H₂SO₄)',
+    tools:'• Beaker  • Measuring Cylinder  • Fume Hood',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Face Shield  • Fume Hood',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Face Shield','Fume Hood'],
+    steps:['CAUTION: Never mix concentrated acids carelessly.','Ensure fume hood is active and all PPE worn.','Always add acid to water, never water to acid.','Add H₂SO₄ slowly into the container first.','Add HCl dropwise. Observe fuming.','Keep away from face — corrosive fumes.','Neutralize any spills immediately with NaHCO₃.'],
+    effect:'smoke', liquidColor:'#d8c840', bgColor:'#f0e860',
+    observation:'Fuming, highly corrosive acid mixture. Extreme caution!'
+  },
+  'HCl+CuSO4':{
+    title:'🔄 Double Displacement',
+    formula:'CuSO₄ + 2HCl → CuCl₂ + H₂SO₄',
+    sub:'Double Displacement  |  Blue-green CuCl₂ solution forms',
+    badge:'DISPLACEMENT', badgeColor:'#80e8d0',
+    overview:'CuSO₄ + 2HCl → CuCl₂ + H₂SO₄\nCopper chloride (blue-green) and sulfuric acid are produced.',
+    chemNames:'• Copper Sulfate (CuSO₄)\n• Hydrochloric Acid (HCl)',
+    tools:'• Beaker  • Dropper  • Stirrer',
+    safety:'• Goggles  • Gloves  • Lab Coat',
+    requiredSafety:['Goggles','Gloves','Lab Coat'],
+    steps:['Prepare CuSO₄ solution in a clean beaker.','Add dilute HCl slowly using a dropper.','Stir gently and observe color change.','Blue-green color indicates CuCl₂ formation.','Note: solution becomes more acidic (H₂SO₄ formed).','Test pH with indicator paper.','Record observations and color changes.'],
+    effect:'bubbles', liquidColor:'#30b890', bgColor:'#80e0c8',
+    observation:'Blue-green copper chloride (CuCl₂) solution forms.'
+  },
+  'H2SO4+NaOH':{
+    title:'⚗ Acid – Base Neutralization',
+    formula:'2NaOH + H₂SO₄ → Na₂SO₄ + 2H₂O',
+    sub:'Neutralization  |  Sodium sulfate salt + Water  |  Exothermic',
+    badge:'NEUTRALIZATION', badgeColor:'#a0f0c0',
+    overview:'2NaOH + H₂SO₄ → Na₂SO₄ + 2H₂O\nSodium sulfate salt and water are formed. Exothermic.',
+    chemNames:'• Sodium Hydroxide (NaOH)\n• Sulfuric Acid (H₂SO₄)',
+    tools:'• Beaker  • Dropper  • Stirrer  • Measuring Cylinder',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Face Shield',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Face Shield'],
+    steps:['Measure 10 mL of H₂SO₄ carefully into a beaker.','Prepare NaOH solution separately.','Add NaOH slowly, dropwise, to the acid.','Stir constantly — significant heat is produced.','Test with litmus: neutral = green.','Na₂SO₄ (Glauber\'s salt) forms in solution.','Allow to cool before handling.'],
+    effect:'bubbles', liquidColor:'#c8e870', bgColor:'#d8f080',
+    observation:'Sodium sulfate (Na₂SO₄) solution. Heat generated — pH → 7.'
+  },
+  'KMnO4+NaOH':{
+    title:'🟢 Alkaline Permanganate',
+    formula:'KMnO₄ + 2NaOH → K⁺ + MnO₄²⁻ + 2Na⁺ + 2OH⁻',
+    sub:'Permanganate in base  |  Green manganate ion forms',
+    badge:'REDOX', badgeColor:'#c0a0ff',
+    overview:'KMnO₄ in alkaline (NaOH) solution → MnO₄²⁻ (green manganate).\nColor changes from purple to deep green.',
+    chemNames:'• Potassium Permanganate (KMnO₄)\n• Sodium Hydroxide (NaOH)',
+    tools:'• Test Tube  • Dropper  • Stirrer',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Face Shield',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Face Shield'],
+    steps:['Prepare dilute NaOH solution in a test tube.','Add a few crystals of KMnO₄.','Observe the deep purple color of MnO₄⁻.','Add more NaOH — color shifts to green (MnO₄²⁻).','This demonstrates the effect of pH on oxidation state.','Record color change at each stage.','Compare color before and after base addition.'],
+    effect:'smoke', liquidColor:'#6040b0', bgColor:'#c0a8e8',
+    observation:'Purple → green color shift. Manganate (MnO₄²⁻) forms in base.'
+  },
+  'HCl+KMnO4':{
+    title:'⚠️ Chlorine Gas Generation',
+    formula:'2KMnO₄ + 16HCl → 2KCl + 2MnCl₂ + 5Cl₂↑ + 8H₂O',
+    sub:'Redox  |  Cl₂ GAS liberated — TOXIC  |  FUME HOOD MANDATORY',
+    badge:'Cl₂ GAS ☠️', badgeColor:'#ffee80',
+    overview:'2KMnO₄ + 16HCl → 2KCl + 2MnCl₂ + 5Cl₂↑ + 8H₂O\nToxic chlorine gas is liberated. Extremely hazardous.',
+    chemNames:'• Potassium Permanganate (KMnO₄)\n• Hydrochloric Acid (HCl)',
+    tools:'• Fume Hood  • Round Flask  • Delivery Tube',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Face Shield  • Fume Hood',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Face Shield','Fume Hood'],
+    steps:['⚠️ NEVER do this outside a fume hood!','Wear all PPE including respirator if available.','Place KMnO₄ in a round-bottom flask.','Add concentrated HCl slowly via dropping funnel.','Cl₂ gas (yellow-green) is evolved immediately.','Collect gas over water or in absorption vessel.','Neutralize excess gas with NaOH solution trap.'],
+    effect:'smoke', liquidColor:'#b8c020', bgColor:'#e8e840',
+    observation:'⚠️ Yellow-green Cl₂ gas released. Highly toxic!'
+  },
+  'H2SO4+NaCl':{
+    title:'💨 HCl Gas Production',
+    formula:'NaCl + H₂SO₄ → NaHSO₄ + HCl↑',
+    sub:'Displacement  |  HCl gas evolved on heating  |  Pungent fumes',
+    badge:'HCl GAS', badgeColor:'#ffd0a0',
+    overview:'NaCl + H₂SO₄ → NaHSO₄ + HCl↑\nHeating causes HCl gas to be released.',
+    chemNames:'• Sodium Chloride (NaCl)\n• Sulfuric Acid (H₂SO₄)',
+    tools:'• Round Flask  • Burner  • Delivery Tube  • Fume Hood',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Fume Hood',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Fume Hood'],
+    steps:['Place NaCl crystals in a round-bottom flask.','Add concentrated H₂SO₄ carefully.','Set up a delivery tube leading to collection vessel.','Gently heat the flask with a Bunsen burner.','HCl gas is evolved — pungent, colorless.','Collect over water or absorb in NaOH solution.','Stop heating and dismantle carefully.'],
+    effect:'smoke', liquidColor:'#d0b840', bgColor:'#e8d860',
+    observation:'Pungent HCl gas fumes released on heating.'
+  },
+  'CuSO4+H2SO4':{
+    title:'🔵 Acidified Copper Sulfate',
+    formula:'CuSO₄ + H₂SO₄ → Cu²⁺ + 2HSO₄⁻ (acidified solution)',
+    sub:'Acidified solution  |  Used in electroplating & electrolysis',
+    badge:'ACIDIFIED SOL.', badgeColor:'#80d8ff',
+    overview:'CuSO₄ + H₂SO₄ → Acidified copper sulfate solution.\nBright blue, used in electroplating and Daniell cell.',
+    chemNames:'• Copper Sulfate (CuSO₄)\n• Sulfuric Acid (H₂SO₄)',
+    tools:'• Beaker  • Stirrer  • Measuring Cylinder',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Face Shield',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Face Shield'],
+    steps:['Prepare CuSO₄ solution in a beaker.','Add dilute H₂SO₄ slowly and stir.','Observe — solution remains bright blue.','The acid prevents Cu(OH)₂ precipitation.','This is the standard electrolyte for Cu electroplating.','Measure pH — should be acidic (pH 2–4).','Use in electroplating or Daniell cell experiment.'],
+    effect:'bubbles', liquidColor:'#2080c0', bgColor:'#80c8f0',
+    observation:'Bright blue acidified CuSO₄ solution. Used in electroplating.'
+  },
+  'HCl+H2SO4+KMnO4':{
+    title:'⚠️ Oxidation + Acid Mix',
+    formula:'2KMnO₄ + 16HCl + H₂SO₄ → Cl₂↑ + MnSO₄ + ...',
+    sub:'Multi-reagent oxidation  |  Cl₂ + SO₂ fumes  |  EXTREME HAZARD',
+    badge:'MULTI-REDOX ☠️', badgeColor:'#ff9060',
+    overview:'Combined oxidation with KMnO₄ in mixed acid environment.\nMultiple toxic gases produced — extremely hazardous.',
+    chemNames:'• KMnO₄  • HCl  • H₂SO₄',
+    tools:'• Fume Hood  • Round Flask  • Burner',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Face Shield  • Fume Hood',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Face Shield','Fume Hood'],
+    steps:['This is a DEMONSTRATION only — maximum caution required.','Fume hood must be running at full speed.','Add H₂SO₄ to KMnO₄ solution first.','Add HCl dropwise — Cl₂ gas is immediately evolved.','Multiple toxic gases (Cl₂, SO₂, HCl fumes) are released.','Never attempt without expert supervision.','Neutralize all waste with excess NaOH.'],
+    effect:'smoke', liquidColor:'#a03000', bgColor:'#e06020',
+    observation:'Multiple toxic gases produced. Lab evacuation may be needed!'
+  },
+  /* ── Single-chemical entries ── */
+  'HCl':{
+    title:'🧪 Hydrochloric Acid',
+    formula:'HCl(g) → H⁺(aq) + Cl⁻(aq)',
+    sub:'Strong acid  |  Fully ionizes in water  |  pH < 1',
+    badge:'DISSOCIATION', badgeColor:'#ffd080',
+    overview:'HCl is a strong acid that fully dissociates in water.\nForms acidic solution with pH < 1 at high concentrations.',
+    chemNames:'• Hydrochloric Acid (HCl)',
+    tools:'• Beaker  • Measuring Cylinder  • pH Meter',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Fume Hood',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Fume Hood'],
+    steps:['Prepare a dilute HCl solution (1M) in a beaker.','Observe — fuming, pungent odor.','Measure pH — strong acidic reading (pH 0–2).','Test with litmus — turns red.','Note: HCl gas evolves from concentrated solution.','Never heat concentrated HCl in open air.','Neutralize spills immediately with NaHCO₃.'],
+    effect:'bubbles', liquidColor:'#78c5e8', bgColor:'#b0e0f8',
+    observation:'Clear acidic solution. pH < 2. Pungent fumes.'
+  },
+  'NaOH':{
+    title:'🧪 Sodium Hydroxide',
+    formula:'NaOH(s) → Na⁺(aq) + OH⁻(aq)',
+    sub:'Strong base  |  Highly alkaline  |  pH > 13',
+    badge:'DISSOCIATION', badgeColor:'#a0f080',
+    overview:'NaOH is a strong base that fully dissolves and dissociates in water.\nHighly alkaline — pH > 13. Exothermic dissolution.',
+    chemNames:'• Sodium Hydroxide (NaOH)',
+    tools:'• Beaker  • Stirrer  • pH Meter',
+    safety:'• Goggles  • Gloves  • Lab Coat',
+    requiredSafety:['Goggles','Gloves','Lab Coat'],
+    steps:['Weigh out NaOH pellets carefully.','Add pellets slowly to water (not water to NaOH).','Stir gently — significant heat is produced.','Observe: solution heats up (exothermic dissolution).','Measure pH — strongly alkaline (pH 13–14).','Test with litmus — turns blue.','Cool before using in reactions.'],
+    effect:'dissolve', liquidColor:'#6dcc6d', bgColor:'#b8f0b8',
+    observation:'Highly alkaline solution. pH > 13. Generates heat on dissolving.'
+  },
+  'CuSO4':{
+    title:'🔵 Copper Sulfate',
+    formula:'CuSO₄(s) → Cu²⁺(aq) + SO₄²⁻(aq)',
+    sub:'Ionic dissolution  |  Vivid blue solution  |  Cu²⁺ ions',
+    badge:'DISSOLUTION', badgeColor:'#aadcff',
+    overview:'CuSO₄ dissolves in water to give a vivid blue solution.\nCu²⁺ ions give the characteristic blue color.',
+    chemNames:'• Copper Sulfate (CuSO₄)',
+    tools:'• Beaker  • Stirrer  • Measuring Cylinder',
+    safety:'• Goggles  • Gloves  • Lab Coat',
+    requiredSafety:['Goggles','Gloves','Lab Coat'],
+    steps:['Weigh 5g of CuSO₄·5H₂O crystals (blue vitriol).','Add to 100 mL of distilled water in a beaker.','Stir continuously until fully dissolved.','Observe the vivid blue color — due to Cu²⁺ ions.','Measure conductivity — electrolyte solution.','Heat gently to speed dissolution if needed.','Record: color, clarity, and conductivity.'],
+    effect:'dissolve', liquidColor:'#1e70b8', bgColor:'#a0c8f0',
+    observation:'Vivid blue CuSO₄ solution. Cu²⁺ ions give the blue color.'
+  },
+  'H2SO4':{
+    title:'🧪 Sulfuric Acid',
+    formula:'H₂SO₄ → H⁺ + HSO₄⁻ → 2H⁺ + SO₄²⁻',
+    sub:'Strong diprotic acid  |  Very corrosive  |  Exothermic dilution',
+    badge:'DISSOCIATION', badgeColor:'#ffe080',
+    overview:'H₂SO₄ is a strong diprotic acid — fully ionizes in water.\nDilution is highly exothermic — always add acid to water!',
+    chemNames:'• Sulfuric Acid (H₂SO₄)',
+    tools:'• Beaker  • Measuring Cylinder  • Fume Hood',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Face Shield  • Fume Hood',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Face Shield','Fume Hood'],
+    steps:['ALWAYS add acid to water — never the reverse!','Fill beaker with required volume of distilled water.','Slowly pour H₂SO₄ down the side of the beaker.','Stir constantly — enormous heat is produced.','Allow to cool before proceeding.','Measure pH — very low (0–1).','Handle with extreme care at all times.'],
+    effect:'smoke', liquidColor:'#d8c840', bgColor:'#f8f060',
+    observation:'Highly corrosive acid. Extreme heat on dilution. pH ≈ 0.'
+  },
+  'KMnO4':{
+    title:'🟣 Potassium Permanganate',
+    formula:'KMnO₄ → K⁺(aq) + MnO₄⁻(aq)',
+    sub:'Strong oxidizing agent  |  Deep purple solution  |  Mn = +7',
+    badge:'OXIDIZER', badgeColor:'#e0aaff',
+    overview:'KMnO₄ dissolves to form a deep purple solution.\nMnO₄⁻ is a powerful oxidizer — Mn is in +7 oxidation state.',
+    chemNames:'• Potassium Permanganate (KMnO₄)',
+    tools:'• Beaker  • Stirrer  • Measuring Cylinder',
+    safety:'• Goggles  • Gloves  • Lab Coat  • Face Shield',
+    requiredSafety:['Goggles','Gloves','Lab Coat','Face Shield'],
+    steps:['Weigh out small amount of KMnO₄ crystals.','Add to 100 mL of water in a beaker.','Stir gently — deep purple color forms immediately.','Observe: a small amount gives intense color.','KMnO₄ stains skin and surfaces — handle carefully.','Note: oxidizes organic matter on contact.','Keep away from flammable materials.'],
+    effect:'dissolve', liquidColor:'#9b30cc', bgColor:'#d080f0',
+    observation:'Intense purple solution. Powerful oxidizer. Stains everything!'
+  },
+  'NaCl':{
+    title:'⚪ Dissolution – Sodium Chloride',
+    formula:'NaCl(s) → Na⁺(aq) + Cl⁻(aq)',
+    sub:'Ionic dissolution  |  Electrolyte solution  |  Endothermic',
+    badge:'DISSOLUTION', badgeColor:'#aadcff',
+    overview:'NaCl(s) → Na⁺(aq) + Cl⁻(aq)\nNaCl dissolves in water forming a saline electrolyte solution.',
+    chemNames:'• Sodium Chloride (NaCl)\n• Distilled Water',
+    tools:'• Beaker  • Stirrer  • Measuring Cylinder',
+    safety:'• Goggles  • Gloves',
+    requiredSafety:['Goggles','Gloves'],
+    steps:['Measure 100 mL of distilled water into a beaker.','Weigh out 5 g of NaCl crystals.','Add NaCl slowly while stirring continuously.','Observe crystals dissolving completely.','Measure conductivity — electrolyte solution.','The result is a 5% saline (salt water) solution.','Used in medicine as physiological saline.'],
+    effect:'dissolve', liquidColor:'#b0d8f8', bgColor:'#d0eeff',
+    observation:'Clear saline solution. Crystals fully dissolve. Conducts electricity.'
+  },
+  'NaCl+NaOH':{
+    title:'🔵 Salt + Base (No Reaction)',
+    formula:'NaCl + NaOH → Na⁺ + Cl⁻ + OH⁻ (ionic solution, no reaction)',
+    sub:'No significant reaction  |  Both dissolve ionically',
+    badge:'NO REACTION', badgeColor:'#c0c0c0',
+    overview:'NaCl and NaOH both dissolve independently.\nNo new compound forms — ions co-exist in solution.',
+    chemNames:'• Sodium Chloride (NaCl)\n• Sodium Hydroxide (NaOH)',
+    tools:'• Beaker  • Stirrer',
+    safety:'• Goggles  • Gloves  • Lab Coat',
+    requiredSafety:['Goggles','Gloves','Lab Coat'],
+    steps:['Dissolve NaCl in 100 mL water.','Add NaOH pellets and stir.','No visible reaction occurs.','Measure pH — alkaline (due to NaOH).','No precipitate, no gas, no color change.','This confirms NaCl is a neutral salt.','Ions in solution: Na⁺, Cl⁻, OH⁻.'],
+    effect:'dissolve', liquidColor:'#c8d8e8', bgColor:'#e0eef8',
+    observation:'No reaction. Both dissolve. Solution is alkaline due to NaOH.'
+  },
+  'DEFAULT':{
+    title:'⚗ Unknown Combination',
+    formula:'? + ? → Products (combination not in database)',
+    sub:'Select a recognized chemical combination to see the reaction',
+    badge:'UNKNOWN', badgeColor:'#c0c0c0',
+    overview:'This chemical combination is not in the database.\nTry a different combination.',
+    chemNames:'• (Selected chemicals)',
+    tools:'• Beaker  • Stirrer',
+    safety:'• Goggles  • Gloves',
+    requiredSafety:['Goggles','Gloves'],
+    steps:['This combination is not in the experiment database.','Consult a chemistry reference for this reaction.','Ensure all safety equipment is worn regardless.','Proceed only under qualified supervision.'],
+    effect:'dissolve', liquidColor:'#b0b8c8', bgColor:'#d0d8e8',
+    observation:'Unknown reaction outcome for this combination.'
+  }
+};
+
+/* ────────────────────────────
+   Look up the best matching reaction for current selected chemicals
+──────────────────────────── */
+function lookupReaction(){
+  if(selectedChemicals.length===0)return null;
+  const ids=selectedChemicals.map(c=>c.id).sort();
+  // Try multi-chem key first (all selected), then pairs, then single
+  const keys=[];
+  // All selected
+  keys.push(ids.join('+'));
+  // All pairs (if 3+ selected)
+  if(ids.length>=3){
+    for(let i=0;i<ids.length;i++)for(let j=i+1;j<ids.length;j++)
+      keys.push([ids[i],ids[j]].sort().join('+'));
+  }
+  // Singles
+  ids.forEach(id=>keys.push(id));
+  for(const k of keys){if(chemReactions[k])return chemReactions[k];}
+  return chemReactions['DEFAULT'];
+}
+
+/* ────────────────────────────
+   Update BOTH boards based on currently selected chemicals
+──────────────────────────── */
+function updateBothBoards(){
+  const rxn=lookupReaction();
+  if(!rxn)return;
+
+  // ── Center workbench board ──
+  const badge=document.getElementById('eq-type-badge');
+  badge.textContent=rxn.badge;
+  badge.style.color=rxn.badgeColor;
+  badge.style.background=rxn.badgeColor.replace(')',', 0.1)').replace('rgb','rgba').replace('#','')||'rgba(160,240,192,.08)';
+  badge.style.borderColor=rxn.badgeColor;
+  document.getElementById('eq-main').textContent=rxn.formula;
+  document.getElementById('eq-sub').textContent=rxn.sub;
+
+  // ── Right blackboard ──
+  document.getElementById('board-title').textContent=rxn.title;
+  document.getElementById('board-overview').innerHTML=rxn.overview.replace(/\n/g,'<br>');
+  document.getElementById('board-chemicals').innerHTML=rxn.chemNames.replace(/\n/g,'<br>');
+  document.getElementById('board-tools').textContent=rxn.tools;
+  document.getElementById('board-safety').textContent=rxn.safety;
+  renderSteps(rxn.steps);
+  renderSafetyPanel(rxn.requiredSafety);
+}
+
+/* ════════════════════════════════════════
+   EXPERIMENT LOADING (buttons on left panel)
+   Still works as a shortcut to preset chem selections
 ════════════════════════════════════════ */
 function loadExperiment(id,btn){
   currentExperiment=id;
   const exp=experiments[id];
   document.querySelectorAll('.exp-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  // Right blackboard
+  // Update boards directly from experiments data
+  const badge=document.getElementById('eq-type-badge');
+  const badges={acid_base:{label:'NEUTRALIZATION',color:'#a0f0c0'},
+    precipitation:{label:'PRECIPITATION',color:'#88ccff'},
+    oxidation:{label:'OXIDATION',color:'#e0aaff'},
+    dissolution:{label:'DISSOLUTION',color:'#aadcff'}};
+  const b=badges[id];
+  badge.textContent=b.label;badge.style.color=b.color;badge.style.borderColor=b.color;
+  document.getElementById('eq-main').textContent=exp.reaction.formula;
+  document.getElementById('eq-sub').textContent=exp.eqSub||'';
   document.getElementById('board-title').textContent=exp.name;
   document.getElementById('board-overview').innerHTML=exp.overview.replace(/\n/g,'<br>');
   document.getElementById('board-chemicals').innerHTML=exp.chemicals.replace(/\n/g,'<br>');
@@ -715,16 +1047,6 @@ function loadExperiment(id,btn){
   document.getElementById('board-safety').textContent=exp.safety;
   renderSteps(exp.steps);
   renderSafetyPanel(exp.requiredSafety);
-  // Center workbench board — update active equation
-  const badges={acid_base:{label:'NEUTRALIZATION',color:'#a0f0c0',bg:'rgba(160,240,192,.08)',border:'rgba(160,240,192,.35)'},
-    precipitation:{label:'PRECIPITATION',color:'#88ccff',bg:'rgba(136,204,255,.08)',border:'rgba(136,204,255,.35)'},
-    oxidation:{label:'OXIDATION',color:'#e0aaff',bg:'rgba(224,170,255,.08)',border:'rgba(224,170,255,.35)'},
-    dissolution:{label:'DISSOLUTION',color:'#aadcff',bg:'rgba(170,220,255,.08)',border:'rgba(170,220,255,.35)'}};
-  const b=badges[id];
-  const badge=document.getElementById('eq-type-badge');
-  badge.textContent=b.label;badge.style.color=b.color;badge.style.background=b.bg;badge.style.borderColor=b.border;
-  document.getElementById('eq-main').textContent=exp.reaction.formula;
-  document.getElementById('eq-sub').textContent=exp.eqSub||'';
   setStatus('📖 Loaded: '+exp.name);
   showToast('Experiment loaded: '+exp.name);
 }
@@ -749,7 +1071,6 @@ function renderSafetyPanel(required){
     chip.className='safety-chip';chip.id='sc-'+item.replace(/\s+/g,'-');
     const icons={'Goggles':'🥽','Gloves':'🧤','Lab Coat':'🥼','Face Shield':'🛡️','Fume Hood':'💨'};
     chip.innerHTML=(icons[item]||'⚠️')+' '+item;
-    // Check if already equipped
     if(selectedTools.find(t=>t.name===item))chip.classList.add('equipped');
     c.appendChild(chip);
   });
@@ -757,15 +1078,13 @@ function renderSafetyPanel(required){
 
 function updateSafetyChip(name,equipped){
   const chip=document.getElementById('sc-'+name.replace(/\s+/g,'-'));
-  if(chip){
-    if(equipped)chip.classList.add('equipped');
-    else chip.classList.remove('equipped');
-  }
+  if(chip){if(equipped)chip.classList.add('equipped');else chip.classList.remove('equipped');}
 }
 
 function getMissingSafety(){
-  const exp=experiments[currentExperiment];
-  return exp.requiredSafety.filter(s=>!selectedTools.find(t=>t.name===s));
+  const rxn=lookupReaction();
+  if(!rxn)return['Goggles','Gloves'];
+  return rxn.requiredSafety.filter(s=>!selectedTools.find(t=>t.name===s));
 }
 
 /* ════════════════════════════════════════
@@ -775,10 +1094,7 @@ function showSafetyModal(missing){
   document.getElementById('sm-body').textContent='You must equip the following safety gear before starting this reaction:';
   const c=document.getElementById('sm-items');c.innerHTML='';
   const icons={'Goggles':'🥽','Gloves':'🧤','Lab Coat':'🥼','Face Shield':'🛡️','Fume Hood':'💨'};
-  missing.forEach(m=>{
-    const chip=document.createElement('span');chip.className='sm-chip';
-    chip.textContent=(icons[m]||'⚠️')+' '+m;c.appendChild(chip);
-  });
+  missing.forEach(m=>{const chip=document.createElement('span');chip.className='sm-chip';chip.textContent=(icons[m]||'⚠️')+' '+m;c.appendChild(chip);});
   document.getElementById('safety-modal').classList.add('show');
 }
 function closeSafetyModal(){document.getElementById('safety-modal').classList.remove('show');}
@@ -799,6 +1115,7 @@ function selectChemical(el){
     selectedChemicals=selectedChemicals.filter(c=>c.id!==id);
     removeItemFromTable(id);
   }
+  updateBothBoards();
   updateStatusBar();
 }
 
@@ -916,11 +1233,12 @@ function startReaction(){
   if(isReacting)return;
   if(selectedChemicals.length<1){showToast('⚠️ Add at least one chemical first!');return;}
 
+  const rxn=lookupReaction();
+
   // Safety check
   const missing=getMissingSafety();
   if(missing.length>0){
     showSafetyModal(missing);
-    // Flash missing chips
     missing.forEach(m=>{
       const chip=document.getElementById('sc-'+m.replace(/\s+/g,'-'));
       if(chip){chip.classList.add('required-missing');setTimeout(()=>chip.classList.remove('required-missing'),500);}
@@ -929,32 +1247,29 @@ function startReaction(){
   }
 
   isReacting=true;
-  const exp=experiments[currentExperiment],rz=document.getElementById('reaction-zone');
-  setStatus('⚗️ Reaction in progress — '+exp.name);showToast('🔬 Reaction started!');
+  const rz=document.getElementById('reaction-zone');
+  setStatus('⚗️ Reaction in progress — '+rxn.title);showToast('🔬 Reaction started!');
 
-  rz.style.background=exp.reaction.color+'bb';rz.style.borderColor=exp.reaction.color;
+  rz.style.background=rxn.bgColor+'bb';
 
-  // Build animated beaker in reaction zone
   rz.innerHTML=`
     <div style="position:relative;width:110px;margin:0 auto">
-      ${buildReactionBeakerSVG(exp.reaction.liquidColor,exp.reaction.color)}
+      ${buildReactionBeakerSVG(rxn.liquidColor,rxn.bgColor)}
       <div id="bubble-container" style="position:absolute;bottom:16px;left:8px;right:8px;height:56px;overflow:hidden;pointer-events:none"></div>
     </div>
-    <div style="font-family:'Caveat',cursive;color:#5a3a1a;font-size:.88rem;text-align:center;margin-top:4px">${exp.reaction.formula}</div>
-    <div id="obs-text" style="font-family:'Caveat',cursive;color:#3a5a2a;font-size:.75rem;text-align:center;opacity:0;transition:opacity 1s">${exp.reaction.observation}</div>`;
+    <div style="font-family:'Caveat',cursive;color:#5a3a1a;font-size:.85rem;text-align:center;margin-top:4px;line-height:1.3">${rxn.formula}</div>
+    <div id="obs-text" style="font-family:'Caveat',cursive;color:#3a5a2a;font-size:.73rem;text-align:center;opacity:0;transition:opacity 1s">${rxn.observation}</div>`;
 
-  const effect=exp.reaction.effect;
+  const effect=rxn.effect;
   if(effect==='bubbles'||effect==='dissolve')spawnBubbles();
   if(effect==='smoke')spawnSmoke(rz);
   if(effect==='precipitate')spawnPrecipitate(rz);
 
   const duration=Math.max(1500,4500-(temperature-25)*40);
-  setTimeout(()=>{
-    const ot=document.getElementById('obs-text');if(ot)ot.style.opacity='1';
-  },duration*0.5);
+  setTimeout(()=>{const ot=document.getElementById('obs-text');if(ot)ot.style.opacity='1';},duration*0.5);
   setTimeout(()=>{
     isReacting=false;
-    setStatus('✅ Reaction complete — '+exp.name+'. '+exp.reaction.observation);
+    setStatus('✅ Reaction complete — '+rxn.title+'. '+rxn.observation);
     showToast('✅ Reaction complete!');
   },duration);
 }
