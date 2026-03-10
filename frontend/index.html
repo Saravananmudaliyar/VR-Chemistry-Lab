@@ -161,58 +161,141 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif
 .exp-btn:hover{background:linear-gradient(180deg,#9b6e4c,#7b5236);transform:translateY(-1px)}
 .exp-btn.active{background:linear-gradient(180deg,#1a6b3a,#0d3d20);border-color:#2d9a55;box-shadow:0 0 8px rgba(45,154,85,.45)}
 
-/* ═══════════════════════════ CENTER — EXPERIMENT TABLE ═══════════════════════════ */
-#experiment-area{padding:12px 8px;display:flex;flex-direction:column;gap:8px}
-#lab-table{
-  flex:1;background:linear-gradient(180deg,#f0ebe0,#e8dcc8 80%,#d4c5a0);
-  border-radius:8px;border:3px solid #8b6040;
-  box-shadow:0 6px 22px rgba(0,0,0,.4),inset 0 1px 0 rgba(255,255,255,.65),inset 0 -3px 8px rgba(0,0,0,.08);
-  position:relative;overflow:hidden;min-height:340px;display:flex;flex-direction:column
+/* ═══════════════════════════ CENTER — WORKBENCH ═══════════════════════════ */
+#experiment-area{
+  padding:10px 8px 8px;display:flex;flex-direction:column;gap:0;overflow:hidden
 }
-#lab-table::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,transparent 0,transparent 59px,rgba(0,0,0,.035) 59px,rgba(0,0,0,.035) 60px);pointer-events:none}
-#table-label{position:absolute;top:8px;left:50%;transform:translateX(-50%);font-family:'Special Elite',serif;color:rgba(100,60,20,.3);font-size:.82rem;letter-spacing:3px;text-transform:uppercase;white-space:nowrap;pointer-events:none}
-.table-leg{position:absolute;bottom:-15px;width:14px;height:18px;background:linear-gradient(90deg,var(--wood),#7a5030,var(--wood));border-radius:0 0 4px 4px}
-.left-leg{left:18px}.right-leg{right:18px}
 
-/* ─── WORKSPACE ─── */
-#workspace{flex:1;position:relative;padding:38px 14px 14px;display:flex;flex-wrap:wrap;align-content:flex-start;gap:10px;overflow-y:auto;max-height:310px}
-#rz-hint{font-family:'Caveat',cursive;font-size:.88rem;color:rgba(100,60,20,.5);text-align:center}
-
-/* ─── PLACED ITEMS ON TABLE ─── */
-.placed-item{display:flex;flex-direction:column;align-items:center;gap:4px;animation:placeBounce .4s cubic-bezier(.34,1.56,.64,1);cursor:default;position:relative}
-@keyframes placeBounce{from{transform:translateY(-28px) scale(.7);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
-.placed-item .item-label{font-size:.6rem;color:#5a3a1a;font-weight:700;background:rgba(255,255,255,.7);padding:1px 5px;border-radius:10px;white-space:nowrap}
-
-/* ─── BEAKER SIMULATION ON TABLE ─── */
-.table-beaker-wrap{display:flex;flex-direction:column;align-items:center;position:relative}
-.table-beaker-svg{filter:drop-shadow(0 4px 8px rgba(0,0,0,.3))}
-.bubble-zone{position:absolute;bottom:14px;left:8px;right:8px;height:50px;overflow:hidden;pointer-events:none}
-.precip-zone{position:absolute;bottom:10px;left:8px;right:8px;height:50px;pointer-events:none}
-
-/* ─── REACTION ZONE (bottom strip of workspace) ─── */
-#reaction-zone{
-  width:100%;min-height:72px;background:rgba(255,255,255,.28);
-  border:2px dashed rgba(100,60,20,.22);border-radius:8px;
+/* ─── TOP: BLACKBOARD PANEL ─── */
+#workbench-board{
+  flex:1;min-height:0;
+  background:linear-gradient(145deg,#223d2c,#1a3022,#253f2e,#1e3528);
+  border:5px solid #6b4226;border-bottom:3px solid #4a2e10;
+  border-radius:6px 6px 0 0;
+  box-shadow:inset 0 0 40px rgba(0,0,0,.35),0 4px 16px rgba(0,0,0,.45),inset 0 1px 0 rgba(255,255,255,.04);
+  position:relative;overflow:hidden;
+  padding:10px 14px 8px;
+  display:flex;flex-direction:column;gap:4px
+}
+/* chalk texture overlay */
+#workbench-board::before{
+  content:'';position:absolute;inset:0;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events:none;opacity:.6
+}
+/* chalk tray at bottom of board */
+#workbench-board::after{
+  content:'';position:absolute;bottom:0;left:-5px;right:-5px;height:10px;
+  background:linear-gradient(180deg,#7a5030,#5a3a1a);
+  border-top:1px solid #9b6e4c
+}
+.wb-board-title{
+  font-family:'Special Elite',serif;color:#f0ebe0;font-size:.85rem;letter-spacing:2px;
+  text-align:center;text-transform:uppercase;opacity:.7;margin-bottom:2px
+}
+/* ── Floating chalk equations scattered around the board ── */
+.chalk-eq{
+  font-family:'Caveat',cursive;color:rgba(240,235,224,0.55);
+  position:absolute;pointer-events:none;white-space:nowrap;
+  text-shadow:0 0 6px rgba(240,235,224,.2)
+}
+/* ── Active experiment equation — prominent center display ── */
+#active-eq-zone{
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:6px;padding:10px;position:relative;overflow:hidden;margin-top:auto;
-  transition:background 1.5s ease,border-color 1s ease
+  flex:1;gap:4px;position:relative;z-index:2
+}
+.eq-main{
+  font-family:'Caveat',cursive;color:#f0ebe0;font-size:1.35rem;font-weight:700;
+  text-align:center;text-shadow:0 0 14px rgba(240,235,224,.45);
+  letter-spacing:1px;line-height:1.3
+}
+.eq-sub{
+  font-family:'Caveat',cursive;color:rgba(240,220,100,.75);font-size:.8rem;
+  text-align:center;letter-spacing:.5px
+}
+.eq-type-badge{
+  font-family:'Special Elite',serif;font-size:.62rem;letter-spacing:1.5px;
+  padding:2px 10px;border-radius:20px;border:1px solid;margin-bottom:2px
+}
+/* ── Chalk divider line ── */
+.wb-chalk-line{border:none;border-top:1px dashed rgba(240,235,224,.2);margin:3px 0}
+/* ── Secondary equations row ── */
+#secondary-eqs{
+  display:flex;gap:12px;justify-content:center;flex-wrap:wrap;padding-bottom:8px;position:relative;z-index:2
+}
+.sec-eq{
+  font-family:'Caveat',cursive;color:rgba(240,235,224,.38);font-size:.72rem;
+  padding:2px 8px;border:1px solid rgba(240,235,224,.12);border-radius:4px
 }
 
-/* ─── SAFETY CHECKLIST PANEL ─── */
+/* ─── BOTTOM: PHYSICAL LAB TABLE ─── */
+#lab-table{
+  background:linear-gradient(180deg,#f5efe2,#ede0c8 70%,#d8c8a8);
+  border:3px solid #8b6040;border-top:2px solid #6b4226;
+  border-radius:0 0 8px 8px;
+  box-shadow:0 6px 20px rgba(0,0,0,.4),inset 0 2px 0 rgba(255,255,255,.5),inset 0 -3px 8px rgba(0,0,0,.1);
+  position:relative;overflow:hidden;flex-shrink:0
+}
+/* wood grain lines */
+#lab-table::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(92deg,transparent 0,transparent 38px,rgba(139,96,64,.06) 38px,rgba(139,96,64,.06) 39px),
+             repeating-linear-gradient(180deg,transparent 0,transparent 18px,rgba(0,0,0,.018) 18px,rgba(0,0,0,.018) 19px);
+  pointer-events:none
+}
+#table-label{
+  position:absolute;top:6px;left:50%;transform:translateX(-50%);
+  font-family:'Special Elite',serif;color:rgba(100,60,20,.25);font-size:.7rem;
+  letter-spacing:3px;text-transform:uppercase;white-space:nowrap;pointer-events:none
+}
+.table-leg{position:absolute;bottom:-14px;width:13px;height:16px;background:linear-gradient(90deg,var(--wood),#7a5030,var(--wood));border-radius:0 0 4px 4px;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.left-leg{left:16px}.right-leg{right:16px}
+
+/* ─── CHEMICALS ROW on table ─── */
+#chemicals-row{
+  display:flex;align-items:flex-end;justify-content:center;gap:14px;
+  padding:26px 16px 8px;min-height:110px;flex-wrap:wrap
+}
+#chem-hint{
+  font-family:'Caveat',cursive;font-size:.85rem;color:rgba(100,60,20,.45);
+  text-align:center;align-self:center;width:100%
+}
+
+/* ─── REACTION ZONE strip on table ─── */
+#reaction-zone{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:6px 10px 10px;min-height:78px;position:relative;overflow:hidden;
+  background:rgba(255,255,255,.22);border-top:2px dashed rgba(100,60,20,.15);
+  transition:background 1.5s ease
+}
+#rz-hint{font-family:'Caveat',cursive;font-size:.82rem;color:rgba(100,60,20,.4);text-align:center}
+
+/* ─── PLACED CHEMICAL ITEM on table ─── */
+.placed-item{display:flex;flex-direction:column;align-items:center;gap:3px;animation:placeBounce .4s cubic-bezier(.34,1.56,.64,1);cursor:default;position:relative}
+@keyframes placeBounce{from{transform:translateY(-32px) scale(.6);opacity:0}to{transform:translateY(0) scale(1);opacity:1}}
+.placed-item .item-label{font-size:.58rem;color:#5a3a1a;font-weight:700;background:rgba(255,255,255,.75);padding:1px 5px;border-radius:10px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,.12)}
+
+/* ─── BEAKER ON TABLE ─── */
+.table-beaker-wrap{display:flex;flex-direction:column;align-items:center;position:relative}
+.table-beaker-svg{filter:drop-shadow(0 5px 10px rgba(0,0,0,.3))}
+
+
+/* ─── SAFETY PANEL (compact strip) ─── */
 #safety-panel{
-  background:rgba(255,240,200,.85);border:2px solid #c8a050;border-radius:8px;
-  padding:8px 10px;margin-bottom:4px;font-family:'Caveat',cursive
+  background:rgba(60,30,5,.55);border-left:4px solid #c8a050;border-right:4px solid #6b4226;
+  padding:5px 10px;font-family:'Caveat',cursive;flex-shrink:0;
+  display:flex;align-items:center;gap:8px;flex-wrap:wrap
 }
-#safety-panel .sp-title{font-size:.8rem;color:#5a3a00;font-weight:700;letter-spacing:.5px;margin-bottom:5px}
-.safety-items{display:flex;flex-wrap:wrap;gap:5px}
+#safety-panel .sp-title{font-size:.72rem;color:#f0d080;font-weight:700;letter-spacing:.5px;white-space:nowrap}
+.safety-items{display:flex;flex-wrap:wrap;gap:4px}
 .safety-chip{
-  display:inline-flex;align-items:center;gap:4px;
-  padding:3px 8px;border-radius:20px;font-size:.7rem;
-  background:rgba(255,255,255,.6);border:1.5px solid #c8a050;
-  color:#5a3a00;transition:all .3s;cursor:default
+  display:inline-flex;align-items:center;gap:3px;
+  padding:2px 7px;border-radius:20px;font-size:.65rem;
+  background:rgba(255,255,255,.1);border:1px solid rgba(200,160,80,.4);
+  color:#f0d0a0;transition:all .3s;cursor:default
 }
-.safety-chip.equipped{background:rgba(100,220,100,.35);border-color:#3a8a3a;color:#1a4a1a}
-.safety-chip.required-missing{background:rgba(255,80,80,.2);border-color:#c03030;color:#7a0000;animation:shake .4s ease}
+.safety-chip.equipped{background:rgba(80,200,100,.25);border-color:#3a8a3a;color:#a0f0b0}
+.safety-chip.required-missing{background:rgba(255,80,80,.2);border-color:#c03030;color:#ffaaaa;animation:shake .4s ease}
 @keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
 
 /* ─── ACTION BUTTONS ─── */
@@ -430,22 +513,57 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif
       </div>
     </section>
 
-    <!-- ══ CENTER — EXPERIMENT TABLE ══ -->
+    <!-- ══ CENTER — WORKBENCH ══ -->
     <section id="experiment-area">
 
-      <!-- SAFETY CHECKLIST -->
+      <!-- TOP: BLACKBOARD PANEL -->
+      <div id="workbench-board">
+        <div class="wb-board-title">✦ Experiment Workbench ✦</div>
+
+        <!-- Scattered chalk equations (decorative, always visible) -->
+        <div class="chalk-eq" style="top:8%;left:2%;font-size:.68rem;transform:rotate(-4deg)">H₂ + O → H₂O</div>
+        <div class="chalk-eq" style="top:18%;right:3%;font-size:.6rem;transform:rotate(3deg)">pH = -log[H⁺]</div>
+        <div class="chalk-eq" style="bottom:22%;left:1%;font-size:.62rem;transform:rotate(-2deg)">ΔG = ΔH − TΔS</div>
+        <div class="chalk-eq" style="bottom:14%;right:2%;font-size:.58rem;transform:rotate(2deg)">PV = nRT</div>
+        <div class="chalk-eq" style="top:55%;left:3%;font-size:.55rem;transform:rotate(-3deg)">Ka = [H⁺][A⁻]/[HA]</div>
+        <div class="chalk-eq" style="top:38%;right:2%;font-size:.56rem;transform:rotate(1deg)">Kw = 10⁻¹⁴</div>
+
+        <!-- Active experiment equation — center stage -->
+        <div id="active-eq-zone">
+          <div class="eq-type-badge" id="eq-type-badge" style="color:#a0f0c0;border-color:rgba(160,240,192,.35);background:rgba(160,240,192,.08)">NEUTRALIZATION</div>
+          <div class="eq-main" id="eq-main">HCl + NaOH → NaCl + H₂O</div>
+          <div class="eq-sub" id="eq-sub">Acid + Base → Salt + Water &nbsp;|&nbsp; Exothermic</div>
+        </div>
+
+        <hr class="wb-chalk-line"/>
+
+        <!-- Secondary reference equations -->
+        <div id="secondary-eqs">
+          <span class="sec-eq" id="sec-eq-1">CuSO₄ + 2NaOH → Cu(OH)₂↓ + Na₂SO₄</span>
+          <span class="sec-eq" id="sec-eq-2">NaCl → Na⁺ + Cl⁻</span>
+          <span class="sec-eq" id="sec-eq-3">2KMnO₄ + H₂SO₄ → K₂SO₄ + Mn²⁺</span>
+        </div>
+      </div>
+
+      <!-- SAFETY CHECKLIST (compact strip between board and table) -->
       <div id="safety-panel">
-        <div class="sp-title">🛡️ Safety Check — Equip required gear before reacting:</div>
+        <div class="sp-title">🛡️ Safety Check:</div>
         <div class="safety-items" id="safety-items-list"></div>
       </div>
 
+      <!-- BOTTOM: PHYSICAL LAB TABLE -->
       <div id="lab-table">
-        <div id="table-label">EXPERIMENT WORKBENCH</div>
+        <div id="table-label">LAB TABLE</div>
         <div class="table-leg left-leg"></div><div class="table-leg right-leg"></div>
-        <div id="workspace">
-          <div id="reaction-zone">
-            <p id="rz-hint">📍 Select chemicals &amp; tools, then click <strong>Start Reaction</strong></p>
-          </div>
+
+        <!-- Chemicals + tools sitting on table surface -->
+        <div id="chemicals-row">
+          <span id="chem-hint">📍 Select chemicals &amp; tools from the left panel</span>
+        </div>
+
+        <!-- Reaction strip at bottom of table -->
+        <div id="reaction-zone">
+          <p id="rz-hint">Click <strong>▶ Start Reaction</strong> to begin</p>
         </div>
       </div>
 
@@ -516,7 +634,8 @@ const experiments={
     safety:'• Goggles  • Gloves  • Lab Coat',
     requiredSafety:['Goggles','Gloves','Lab Coat'],
     steps:['Take a clean beaker and place it on the table.','Measure 10 mL of HCl using the measuring cylinder.','Carefully pour HCl into the beaker.','Add NaOH slowly, drop by drop, using the dropper.','Stir the mixture gently with the glass rod.','Observe — heat is released (exothermic reaction).','Test with indicator: pH should be ≈ 7 (neutral).'],
-    reaction:{color:'#c8f0c8',effect:'bubbles',formula:'HCl + NaOH → NaCl + H₂O',liquidColor:'#a0e8a0',observation:'Solution becomes clear/neutral. Slight heat felt.'}
+    reaction:{color:'#c8f0c8',effect:'bubbles',formula:'HCl + NaOH → NaCl + H₂O',liquidColor:'#a0e8a0',observation:'Solution becomes clear/neutral. Slight heat felt.'},
+    eqSub:'Acid + Base → Salt + Water  |  Exothermic  |  ΔH < 0'
   },
   precipitation:{
     name:'🔵 Precipitation Reaction',
@@ -526,7 +645,8 @@ const experiments={
     safety:'• Goggles  • Gloves  • Lab Coat',
     requiredSafety:['Goggles','Gloves','Lab Coat'],
     steps:['Take a clean test tube.','Add 5 mL of CuSO₄ (blue) solution to the tube.','Slowly add NaOH using the dropper.','Observe the formation of a blue precipitate.','The precipitate is Copper(II) Hydroxide — Cu(OH)₂.','Allow the precipitate to settle at the bottom.','Record the color, texture, and amount of precipitate.'],
-    reaction:{color:'#a0c8f0',effect:'precipitate',formula:'CuSO₄ + 2NaOH → Cu(OH)₂↓ + Na₂SO₄',liquidColor:'#4090d0',observation:'Blue precipitate settles at bottom of solution.'}
+    reaction:{color:'#a0c8f0',effect:'precipitate',formula:'CuSO₄ + 2NaOH → Cu(OH)₂↓ + Na₂SO₄',liquidColor:'#4090d0',observation:'Blue precipitate settles at bottom of solution.'},
+    eqSub:'Double Displacement  |  Blue precipitate forms  |  Cu(OH)₂ ↓'
   },
   oxidation:{
     name:'🟣 Oxidation Reaction',
@@ -536,7 +656,8 @@ const experiments={
     safety:'• Goggles  • Gloves  • Lab Coat  • Face Shield  • Fume Hood',
     requiredSafety:['Goggles','Gloves','Lab Coat','Face Shield','Fume Hood'],
     steps:['Wear safety goggles and face shield before beginning.','Ensure fume hood is operational.','Add dilute H₂SO₄ into the beaker (10 mL).','Dissolve KMnO₄ crystals in 20 mL water separately.','Slowly add KMnO₄ solution to the acid.','Observe the deep purple color change.','Gently heat with the Bunsen burner if reaction is slow.','Record temperature and all color changes observed.'],
-    reaction:{color:'#e0b0f0',effect:'smoke',formula:'2KMnO₄ + H₂SO₄ → K₂SO₄ + Mn²⁺ + H₂O',liquidColor:'#9020b0',observation:'Deep purple solution. Toxic fumes — use fume hood!'}
+    reaction:{color:'#e0b0f0',effect:'smoke',formula:'2KMnO₄ + H₂SO₄ → K₂SO₄ + Mn²⁺ + H₂O',liquidColor:'#9020b0',observation:'Deep purple solution. Toxic fumes — use fume hood!'},
+    eqSub:'Redox Reaction  |  KMnO₄ = strong oxidizer  |  Deep purple'
   },
   dissolution:{
     name:'⚪ Dissolution Experiment',
@@ -546,7 +667,8 @@ const experiments={
     safety:'• Goggles  • Gloves',
     requiredSafety:['Goggles','Gloves'],
     steps:['Measure 100 mL of distilled water in the cylinder.','Pour the water into a clean beaker.','Weigh out 5 g of NaCl crystals.','Add NaCl slowly into the beaker of water.','Stir continuously with the glass stirring rod.','Observe the crystals dissolving completely.','The resulting solution is 5% saline (salt water).'],
-    reaction:{color:'#d0eeff',effect:'dissolve',formula:'NaCl(s) → Na⁺(aq) + Cl⁻(aq)',liquidColor:'#b0d8f8',observation:'Clear saline solution. Crystals vanish completely.'}
+    reaction:{color:'#d0eeff',effect:'dissolve',formula:'NaCl(s) → Na⁺(aq) + Cl⁻(aq)',liquidColor:'#b0d8f8',observation:'Clear saline solution. Crystals vanish completely.'},
+    eqSub:'Ionic Dissolution  |  Endothermic  |  Electrolyte solution'
   }
 };
 
@@ -585,6 +707,7 @@ function loadExperiment(id,btn){
   const exp=experiments[id];
   document.querySelectorAll('.exp-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
+  // Right blackboard
   document.getElementById('board-title').textContent=exp.name;
   document.getElementById('board-overview').innerHTML=exp.overview.replace(/\n/g,'<br>');
   document.getElementById('board-chemicals').innerHTML=exp.chemicals.replace(/\n/g,'<br>');
@@ -592,6 +715,16 @@ function loadExperiment(id,btn){
   document.getElementById('board-safety').textContent=exp.safety;
   renderSteps(exp.steps);
   renderSafetyPanel(exp.requiredSafety);
+  // Center workbench board — update active equation
+  const badges={acid_base:{label:'NEUTRALIZATION',color:'#a0f0c0',bg:'rgba(160,240,192,.08)',border:'rgba(160,240,192,.35)'},
+    precipitation:{label:'PRECIPITATION',color:'#88ccff',bg:'rgba(136,204,255,.08)',border:'rgba(136,204,255,.35)'},
+    oxidation:{label:'OXIDATION',color:'#e0aaff',bg:'rgba(224,170,255,.08)',border:'rgba(224,170,255,.35)'},
+    dissolution:{label:'DISSOLUTION',color:'#aadcff',bg:'rgba(170,220,255,.08)',border:'rgba(170,220,255,.35)'}};
+  const b=badges[id];
+  const badge=document.getElementById('eq-type-badge');
+  badge.textContent=b.label;badge.style.color=b.color;badge.style.background=b.bg;badge.style.borderColor=b.border;
+  document.getElementById('eq-main').textContent=exp.reaction.formula;
+  document.getElementById('eq-sub').textContent=exp.eqSub||'';
   setStatus('📖 Loaded: '+exp.name);
   showToast('Experiment loaded: '+exp.name);
 }
@@ -701,12 +834,12 @@ function selectTool(el){
 function hideHint(){const h=document.getElementById('rz-hint');if(h)h.style.display='none';}
 
 function addChemicalToTable(id,label,color){
-  hideHint();
-  const workspace=document.getElementById('workspace'),rz=document.getElementById('reaction-zone');
+  const row=document.getElementById('chemicals-row');
+  const hint=document.getElementById('chem-hint');if(hint)hint.style.display='none';
   const item=document.createElement('div');item.className='placed-item';item.dataset.id=id;
   item.innerHTML=`
     <div class="table-beaker-wrap">
-      <svg viewBox="0 0 60 70" width="60" height="70" class="table-beaker-svg" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 60 72" width="60" height="72" class="table-beaker-svg" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <linearGradient id="liq_${id}" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" style="stop-color:${color};stop-opacity:0.9"/>
@@ -714,55 +847,49 @@ function addChemicalToTable(id,label,color){
           </linearGradient>
           <linearGradient id="gl_${id}" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" style="stop-color:rgba(255,255,255,0.4)"/>
-            <stop offset="50%" style="stop-color:rgba(255,255,255,0.05)"/>
-            <stop offset="100%" style="stop-color:rgba(255,255,255,0.2)"/>
+            <stop offset="50%" style="stop-color:rgba(255,255,255,0.04)"/>
+            <stop offset="100%" style="stop-color:rgba(255,255,255,0.18)"/>
           </linearGradient>
         </defs>
-        <!-- Beaker outline -->
-        <path d="M14 6 L14 36 L4 58 L56 58 L46 36 L46 6 Z" fill="rgba(200,240,255,0.12)" stroke="rgba(100,180,220,0.7)" stroke-width="1.5"/>
-        <!-- Liquid fill -->
-        <path d="M15 30 L15 36 L6 56 L54 56 L45 36 L45 30 Z" fill="url(#liq_${id})" opacity="0.88"/>
-        <!-- Glass sheen -->
-        <path d="M14 6 L14 36 L4 58 L56 58 L46 36 L46 6 Z" fill="url(#gl_${id})"/>
-        <!-- Spout / rim -->
+        <path d="M14 6 L14 36 L4 60 L56 60 L46 36 L46 6 Z" fill="rgba(200,240,255,0.12)" stroke="rgba(100,180,220,0.7)" stroke-width="1.5"/>
+        <path d="M15 30 L15 36 L6 58 L54 58 L45 36 L45 30 Z" fill="url(#liq_${id})" opacity="0.9"/>
+        <path d="M14 6 L14 36 L4 60 L56 60 L46 36 L46 6 Z" fill="url(#gl_${id})"/>
         <rect x="10" y="3" width="40" height="6" rx="2" fill="rgba(180,220,240,0.35)" stroke="rgba(100,180,220,0.7)" stroke-width="1"/>
-        <!-- Graduation marks -->
-        <line x1="42" y1="20" x2="46" y2="20" stroke="rgba(100,180,220,0.5)" stroke-width="0.8"/>
-        <line x1="42" y1="30" x2="46" y2="30" stroke="rgba(100,180,220,0.5)" stroke-width="0.8"/>
-        <line x1="42" y1="40" x2="46" y2="40" stroke="rgba(100,180,220,0.5)" stroke-width="0.8"/>
+        <line x1="43" y1="18" x2="46" y2="18" stroke="rgba(100,180,220,0.55)" stroke-width="0.8"/>
+        <line x1="43" y1="28" x2="46" y2="28" stroke="rgba(100,180,220,0.55)" stroke-width="0.8"/>
+        <line x1="43" y1="38" x2="46" y2="38" stroke="rgba(100,180,220,0.55)" stroke-width="0.8"/>
       </svg>
     </div>
     <div class="item-label">${label}</div>`;
-  workspace.insertBefore(item,rz);
+  row.appendChild(item);
 }
 
 function addToolToTable(name,icon){
-  hideHint();
-  const workspace=document.getElementById('workspace'),rz=document.getElementById('reaction-zone');
+  const row=document.getElementById('chemicals-row');
+  const hint=document.getElementById('chem-hint');if(hint)hint.style.display='none';
   const item=document.createElement('div');item.className='placed-item';item.dataset.id=name;
-  item.innerHTML=`<div style="font-size:2rem;filter:drop-shadow(0 2px 5px rgba(0,0,0,.3))">${icon}</div><div class="item-label">${name}</div>`;
-  workspace.insertBefore(item,rz);
+  item.innerHTML=`<div style="font-size:2rem;filter:drop-shadow(0 3px 6px rgba(0,0,0,.35))">${icon}</div><div class="item-label">${name}</div>`;
+  row.appendChild(item);
 }
 
 function addSafetyToTable(name,icon){
-  hideHint();
-  const workspace=document.getElementById('workspace'),rz=document.getElementById('reaction-zone');
+  const row=document.getElementById('chemicals-row');
+  const hint=document.getElementById('chem-hint');if(hint)hint.style.display='none';
   const item=document.createElement('div');item.className='placed-item';item.dataset.id=name;
   item.innerHTML=`
     <div style="position:relative">
-      <div style="font-size:2rem;filter:drop-shadow(0 2px 5px rgba(0,0,0,.3))">${icon}</div>
+      <div style="font-size:2rem;filter:drop-shadow(0 3px 6px rgba(0,0,0,.35))">${icon}</div>
       <div style="position:absolute;top:-4px;right:-4px;background:#2d9a55;color:#fff;border-radius:50%;width:14px;height:14px;font-size:.55rem;display:flex;align-items:center;justify-content:center;font-weight:800">✓</div>
     </div>
     <div class="item-label" style="color:#1a4a1a;background:rgba(100,220,100,.3)">${name}</div>`;
-  workspace.insertBefore(item,rz);
+  row.appendChild(item);
 }
 
 function removeItemFromTable(id){
-  const item=document.querySelector('#workspace .placed-item[data-id="'+id+'"]');
+  const item=document.querySelector('#chemicals-row .placed-item[data-id="'+id+'"]');
   if(item)item.remove();
-  if(selectedChemicals.length===0&&selectedTools.length===0){
-    const h=document.getElementById('rz-hint');if(h)h.style.display='';
-  }
+  const remaining=document.querySelectorAll('#chemicals-row .placed-item');
+  if(remaining.length===0){const h=document.getElementById('chem-hint');if(h)h.style.display='';}
   updateStatusBar();
 }
 
@@ -773,10 +900,11 @@ function clearTable(){
   selectedChemicals=[];selectedTools=[];isReacting=false;
   document.querySelectorAll('.bottle.selected').forEach(b=>b.classList.remove('selected'));
   document.querySelectorAll('.tool-item.selected').forEach(t=>t.classList.remove('selected'));
-  document.querySelectorAll('#workspace .placed-item').forEach(el=>el.remove());
+  document.querySelectorAll('#chemicals-row .placed-item').forEach(el=>el.remove());
+  const hint=document.getElementById('chem-hint');if(hint)hint.style.display='';
   const rz=document.getElementById('reaction-zone');
-  rz.innerHTML='<p id="rz-hint">📍 Select chemicals &amp; tools, then click <strong>Start Reaction</strong></p>';
-  rz.style.background='rgba(255,255,255,0.28)';rz.style.borderColor='rgba(100,60,20,0.22)';
+  rz.innerHTML='<p id="rz-hint">Click <strong>▶ Start Reaction</strong> to begin</p>';
+  rz.style.background='rgba(255,255,255,.22)';
   renderSafetyPanel(experiments[currentExperiment].requiredSafety);
   setStatus('🧹 Table cleared — ready for a new experiment.');showToast('Table cleared!');updateStatusBar();
 }
