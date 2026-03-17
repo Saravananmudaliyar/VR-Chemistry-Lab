@@ -416,3 +416,1233 @@ html,body{width:100%;height:100%;overflow:hidden;font-family:'Nunito',sans-serif
 .sm-btn:hover{transform:translateY(-2px)}
 
 ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:rgba(0,0,0,.1)}::-webkit-scrollbar-thumb{background:var(--wood-mid);border-radius:3px}
+/* ═══════════════════════════════════════════════════════════
+   style.css — ChemLab Simulator
+   Chemistry Laboratory UI Stylesheet
+   B.Tech Mini Project
+═══════════════════════════════════════════════════════════ */
+
+/* ── GOOGLE FONTS are loaded in index.html ─────────────────
+   Special Elite  → headings / board titles
+   Caveat         → chalk-style blackboard text
+   Nunito         → general UI text
+─────────────────────────────────────────────────────────── */
+
+/* ══════════════════════════════
+   1. CSS VARIABLES (Design Tokens)
+══════════════════════════════ */
+:root {
+  /* Wall & environment */
+  --wall-bg-top:    #d4c4a8;
+  --wall-bg-bot:    #a08060;
+  --baseboard:      #5a3a1a;
+
+  /* Wood tones */
+  --wood-dark:      #5a3a1a;
+  --wood-mid:       #7a4f2d;
+  --wood-light:     #9b6e4c;
+  --shelf-color:    #6b4226;
+
+  /* Surfaces */
+  --table-top:      #f0ebe0;
+  --table-border:   #8b6040;
+
+  /* Blackboard */
+  --board-bg:       #2d5a3d;
+  --board-frame:    #6b4226;
+  --chalk-white:    #f0ebe0;
+  --chalk-yellow:   #f0c060;
+  --chalk-dim:      rgba(240,235,224,0.25);
+
+  /* Accent colors */
+  --glow-blue:      #4fc3f7;
+  --glow-green:     #69f0ae;
+  --accent-red:     #e84545;
+  --accent-gold:    #f0c060;
+
+  /* UI grays */
+  --dark-bg:        #2a1408;
+  --dark-mid:       #3a1f0a;
+  --text-light:     #f5e6c8;
+}
+
+/* ══════════════════════════════
+   2. RESET & BASE
+══════════════════════════════ */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  font-family: 'Nunito', sans-serif;
+}
+
+/* ══════════════════════════════
+   3. REGISTRATION SCREEN
+══════════════════════════════ */
+#registration-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+
+  /* Lab-themed background */
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(0,0,0,0.03) 30px, rgba(0,0,0,0.03) 31px),
+    repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(0,0,0,0.03) 30px, rgba(0,0,0,0.03) 31px),
+    linear-gradient(160deg, #c8b89a 0%, #b09070 50%, #8a6850 100%);
+}
+
+/* semi-transparent dark overlay on registration bg */
+.reg-bg-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(30, 15, 5, 0.45);
+  pointer-events: none;
+}
+
+/* Registration Card */
+.reg-card {
+  position: relative;
+  z-index: 1;
+  background: linear-gradient(160deg, #fffaf0, #f5ede0);
+  border: 3px solid var(--wood-mid);
+  border-radius: 12px;
+  padding: 36px 40px 28px;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.55),
+    inset 0 1px 0 rgba(255,255,255,0.8);
+  animation: card-drop 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+}
+
+@keyframes card-drop {
+  from { transform: translateY(-40px) scale(0.9); opacity: 0; }
+  to   { transform: translateY(0) scale(1);        opacity: 1; }
+}
+
+/* Flask icon above form */
+.reg-icon {
+  font-size: 3.2rem;
+  margin-bottom: 6px;
+  filter: drop-shadow(0 4px 8px rgba(0,0,0,0.3));
+  animation: float-icon 3s ease-in-out infinite alternate;
+}
+
+@keyframes float-icon {
+  from { transform: translateY(0); }
+  to   { transform: translateY(-8px); }
+}
+
+.reg-title {
+  font-family: 'Special Elite', serif;
+  font-size: 1.9rem;
+  color: var(--wood-dark);
+  letter-spacing: 1px;
+}
+
+.reg-title span { color: #1a6b3a; }
+
+.reg-subtitle {
+  font-size: 0.78rem;
+  color: #7a5030;
+  margin-top: 4px;
+  letter-spacing: 0.5px;
+}
+
+/* Horizontal rule inside card */
+.reg-divider {
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--wood-mid), transparent);
+  border-radius: 2px;
+  margin: 16px 0 20px;
+}
+
+/* Form Groups */
+.form-group {
+  text-align: left;
+  margin-bottom: 18px;
+}
+
+.form-group label {
+  display: block;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: var(--wood-dark);
+  margin-bottom: 6px;
+  letter-spacing: 0.3px;
+}
+
+.form-group label small {
+  font-weight: 400;
+  color: #9a7050;
+  font-size: 0.72rem;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 11px 14px;
+  border: 2px solid #c8a878;
+  border-radius: 7px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.92rem;
+  color: var(--wood-dark);
+  background: #fffdf8;
+  transition: border-color 0.25s, box-shadow 0.25s;
+  outline: none;
+}
+
+.form-group input:focus {
+  border-color: #1a6b3a;
+  box-shadow: 0 0 0 3px rgba(26,107,58,0.18);
+}
+
+.form-group input.input-error {
+  border-color: #c03030;
+  box-shadow: 0 0 0 3px rgba(192,48,48,0.18);
+}
+
+/* Validation error text */
+.field-error {
+  display: block;
+  min-height: 16px;
+  font-size: 0.72rem;
+  color: #c03030;
+  margin-top: 4px;
+  font-weight: 600;
+}
+
+/* Submit Button */
+.reg-submit-btn {
+  width: 100%;
+  padding: 13px;
+  margin-top: 6px;
+  border: none;
+  border-radius: 8px;
+  background: linear-gradient(135deg, #1a6b3a, #0d4a22);
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  letter-spacing: 1.5px;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 14px rgba(26,107,58,0.45);
+}
+
+.reg-submit-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(26,107,58,0.55);
+}
+
+.reg-submit-btn:active { transform: translateY(0); }
+
+.reg-note {
+  font-size: 0.68rem;
+  color: #9a7050;
+  margin-top: 14px;
+  font-style: italic;
+}
+
+/* ══════════════════════════════
+   4. LAB ROOM — MAIN WRAPPER
+══════════════════════════════ */
+.hidden { display: none !important; }
+
+#lab-room {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  overflow: hidden;
+  position: relative;
+
+  /* tiled wall texture */
+  background:
+    repeating-linear-gradient(0deg, transparent, transparent 30px, rgba(0,0,0,0.025) 30px, rgba(0,0,0,0.025) 31px),
+    repeating-linear-gradient(90deg, transparent, transparent 30px, rgba(0,0,0,0.025) 30px, rgba(0,0,0,0.025) 31px),
+    linear-gradient(180deg, var(--wall-bg-top) 0%, #c0a880 55%, var(--wall-bg-bot) 100%);
+}
+
+/* Ceiling strip */
+#lab-room::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 7px;
+  background: linear-gradient(90deg, #3a1f0a, #6a4a20, #3a1f0a);
+  z-index: 200;
+}
+
+/* Baseboard strip */
+#lab-room::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 11px;
+  background: linear-gradient(90deg, var(--baseboard), #7a5030, var(--baseboard));
+  z-index: 200;
+}
+
+/* ══════════════════════════════
+   5. HEADER BAR
+══════════════════════════════ */
+#header {
+  grid-row: 1;
+  background: linear-gradient(135deg, #2a1408, #4a2e10, #2a1408);
+  padding: 8px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.55);
+  z-index: 100;
+  border-bottom: 3px solid var(--wood-mid);
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-logo { font-size: 1.5rem; }
+
+#header h1 {
+  font-family: 'Special Elite', serif;
+  color: var(--text-light);
+  font-size: 1.3rem;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+}
+
+#header h1 span { color: var(--accent-gold); }
+
+/* Student name badge in header */
+#student-badge {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  padding: 4px 14px;
+  font-size: 0.78rem;
+  color: #f0d090;
+  font-family: 'Caveat', cursive;
+  font-size: 0.95rem;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.badge-sep { color: rgba(255,255,255,0.3); }
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#voice-status {
+  color: var(--accent-gold);
+  font-size: 0.72rem;
+  font-family: 'Caveat', cursive;
+  max-width: 130px;
+  text-align: right;
+}
+
+/* ── Voice button ── */
+.voice-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-gold);
+  background: radial-gradient(circle, #1a6b3a, #0d3d20);
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.25s, box-shadow 0.25s;
+}
+
+.voice-btn:hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 18px rgba(240,192,96,0.6);
+}
+
+/* Active / listening state */
+.voice-btn.listening {
+  background: radial-gradient(circle, #c03030, #7a1010);
+  border-color: #ff6060;
+  animation: pulse-mic 1s infinite;
+}
+
+@keyframes pulse-mic {
+  0%   { box-shadow: 0 0 0 0   rgba(232,69,69,0.7); }
+  70%  { box-shadow: 0 0 0 14px rgba(232,69,69,0);   }
+  100% { box-shadow: 0 0 0 0   rgba(232,69,69,0);   }
+}
+
+/* ══════════════════════════════
+   6. WALL DECORATIONS
+══════════════════════════════ */
+
+/* ── Wall lights ── */
+.wall-light {
+  position: absolute;
+  top: 44px;
+  width: 40px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.left-light  { left: 268px; }
+.right-light { right: 306px; }
+
+.light-base {
+  width: 38px; height: 8px;
+  background: linear-gradient(180deg, #8b6040, var(--wood-dark));
+  border-radius: 4px;
+}
+
+.light-arm {
+  width: 3px; height: 18px;
+  background: linear-gradient(90deg, #7a5030, #8b6040);
+}
+
+.light-globe {
+  width: 22px; height: 15px;
+  background: radial-gradient(ellipse, #fffde0, #f0d060);
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(255,240,100,0.85), 0 0 42px rgba(255,240,100,0.3);
+  animation: bulb-flicker 6s ease-in-out infinite;
+}
+
+@keyframes bulb-flicker {
+  0%,100% { opacity: 1; }
+  93% { opacity: 1; }
+  94% { opacity: 0.8; }
+  95% { opacity: 1; }
+  97% { opacity: 0.88; }
+  98% { opacity: 1; }
+}
+
+/* ── Thermometer ── */
+#thermometer-wall {
+  position: absolute;
+  right: 312px;
+  top: 54px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.thermo-label {
+  font-family: 'Special Elite', serif;
+  color: var(--wood-dark);
+  font-size: 0.58rem;
+  letter-spacing: 1px;
+  text-align: center;
+}
+
+#thermometer {
+  width: 28px; height: 150px;
+  background: linear-gradient(180deg, #e0d8c8, #f5f0e8);
+  border: 2px solid #8b6040;
+  border-radius: 14px 14px 4px 4px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.5);
+}
+
+#thermo-track {
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  width: 8px;
+  top: 10px; bottom: 18px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#thermo-fill {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  background: linear-gradient(180deg, #ff8c42, #e84545);
+  border-radius: 0 0 3px 3px;
+  transition: height 0.4s ease;
+  height: 8%;  /* set by JS */
+}
+
+#thermo-bulb {
+  position: absolute;
+  bottom: -2px; left: 50%;
+  transform: translateX(-50%);
+  width: 20px; height: 20px;
+  background: radial-gradient(circle at 35% 35%, #ff9070, #e84545);
+  border-radius: 50%;
+  border: 2px solid #8b6040;
+  box-shadow: 0 2px 6px rgba(232,69,69,0.5);
+}
+
+/* invisible range input on top of thermometer for interaction */
+#thermo-slider {
+  position: absolute;
+  left: 50%; transform: translateX(-50%);
+  width: 28px;
+  top: 8px; bottom: 22px;
+  opacity: 0;
+  cursor: ns-resize;
+  z-index: 5;
+  writing-mode: vertical-lr;
+  direction: rtl;
+}
+
+#temp-display {
+  font-family: 'Special Elite', serif;
+  color: var(--wood-dark);
+  font-size: 0.68rem;
+  background: rgba(255,255,255,0.5);
+  border-radius: 4px;
+  padding: 2px 4px;
+  border: 1px solid rgba(100,60,20,0.2);
+  text-align: center;
+}
+
+/* ══════════════════════════════
+   7. MAIN 3-COLUMN LAYOUT
+══════════════════════════════ */
+#lab-layout {
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 254px 1fr 294px;
+  overflow: hidden;
+  height: 100%;
+}
+
+/* ══════════════════════════════
+   8. LEFT SECTION — SHELF
+══════════════════════════════ */
+#shelf-section {
+  padding: 12px 8px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+/* Section label strips */
+.shelf-label {
+  font-family: 'Special Elite', serif;
+  color: var(--wood-dark);
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  text-align: center;
+  background: rgba(255,255,255,0.3);
+  border-radius: 4px;
+  padding: 2px 6px;
+}
+
+/* Wooden shelf plank */
+.shelf-unit {
+  background: linear-gradient(180deg, #8b5e3c, #6b4226 45%, #7a4f2d);
+  border-radius: 4px;
+  padding: 8px 6px 5px;
+  box-shadow:
+    0 4px 8px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.15),
+    inset 0 -2px 4px rgba(0,0,0,0.3);
+  border: 1px solid var(--wood-dark);
+  position: relative;
+}
+
+/* shelf drop-shadow ledge */
+.shelf-unit::after {
+  content: '';
+  position: absolute;
+  bottom: -5px; left: -2px; right: -2px;
+  height: 5px;
+  background: linear-gradient(180deg, #5a3a1a, #4a2e10);
+  border-radius: 0 0 3px 3px;
+  box-shadow: 0 3px 6px rgba(0,0,0,0.4);
+}
+
+.bottles-row {
+  display: flex;
+  justify-content: space-around;
+  align-items: flex-end;
+  gap: 4px;
+  padding-bottom: 4px;
+}
+
+/* ── Individual Bottle ── */
+.bottle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  cursor: pointer;
+  transition: transform 0.2s, filter 0.2s;
+  position: relative;
+  user-select: none;
+}
+
+.bottle:hover {
+  transform: translateY(-7px) scale(1.08);
+  filter: drop-shadow(0 8px 14px rgba(0,0,0,0.5));
+}
+
+.bottle.selected {
+  transform: translateY(-9px) scale(1.1);
+  filter: drop-shadow(0 0 12px var(--glow-blue));
+}
+
+.bottle-body {
+  width: 32px; height: 46px;
+  border-radius: 4px 4px 6px 6px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset 2px 0 4px rgba(255,255,255,0.25),
+    inset -1px 0 4px rgba(0,0,0,0.2),
+    0 2px 8px rgba(0,0,0,0.3);
+  border: 1px solid rgba(255,255,255,0.3);
+}
+
+.bottle-liquid {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 68%;
+  transition: height 0.5s;
+  opacity: 0.85;
+}
+
+/* glass highlight */
+.bottle-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg,
+    rgba(255,255,255,0.35) 0%,
+    transparent 45%,
+    rgba(255,255,255,0.08) 100%);
+  pointer-events: none;
+}
+
+.bottle-neck {
+  width: 15px; height: 11px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.2), rgba(200,200,200,0.3));
+  border: 1px solid rgba(255,255,255,0.3);
+  border-bottom: none;
+  border-radius: 3px 3px 0 0;
+}
+
+.bottle-cap {
+  width: 19px; height: 7px;
+  border-radius: 3px 3px 0 0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+}
+
+.bottle-label {
+  background: rgba(255,252,240,0.92);
+  border: 1px solid rgba(180,140,80,0.5);
+  border-radius: 2px;
+  padding: 1px 3px;
+  font-size: 0.47rem;
+  font-weight: 700;
+  color: #2a1a0a;
+  text-align: center;
+  margin-top: 3px;
+  width: 44px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+
+/* glow underneath selected bottle */
+.bottle-glow {
+  position: absolute;
+  bottom: 14px; left: 50%;
+  transform: translateX(-50%);
+  width: 26px; height: 26px;
+  border-radius: 50%;
+  opacity: 0;
+  transition: opacity 0.3s;
+  filter: blur(8px);
+  pointer-events: none;
+}
+
+.bottle:hover .bottle-glow,
+.bottle.selected .bottle-glow {
+  opacity: 0.6;
+  animation: glow-pulse 2s ease-in-out infinite alternate;
+}
+
+@keyframes glow-pulse {
+  from { transform: translateX(-50%) scale(1); }
+  to   { transform: translateX(-50%) scale(1.35); }
+}
+
+/* ── Bottle-specific liquid and cap colors ── */
+.hcl   .bottle-liquid { background: linear-gradient(180deg, #a0d8ef80, #78c5e8); }
+.hcl   .bottle-cap    { background: #c04444; }
+.hcl   .bottle-glow   { background: #78c5e8; }
+
+.naoh  .bottle-liquid { background: linear-gradient(180deg, #b8eeb880, #6dcc6d); }
+.naoh  .bottle-cap    { background: #3a8a3a; }
+.naoh  .bottle-glow   { background: #6dcc6d; }
+
+.cuso4 .bottle-liquid { background: linear-gradient(180deg, #5b9bd580, #1e70b8); }
+.cuso4 .bottle-cap    { background: #1a5a9a; }
+.cuso4 .bottle-glow   { background: #1e70b8; }
+
+.h2so4 .bottle-liquid { background: linear-gradient(180deg, #f5f0a080, #e8d84a); }
+.h2so4 .bottle-cap    { background: #aa9a00; }
+.h2so4 .bottle-glow   { background: #e8d84a; }
+
+.kmno4 .bottle-liquid { background: linear-gradient(180deg, #d070d080, #9b30cc); }
+.kmno4 .bottle-cap    { background: #6a1a8a; }
+.kmno4 .bottle-glow   { background: #9b30cc; }
+
+.nacl  .bottle-liquid { background: linear-gradient(180deg, #ffffff60, #e0f0ff); }
+.nacl  .bottle-cap    { background: #778899; }
+.nacl  .bottle-glow   { background: #b0d0f0; }
+
+/* ── Lab Tool Drawer ── */
+#tools-drawer {
+  background: linear-gradient(180deg, #7a4f2d, #5a3015);
+  border-radius: 6px;
+  border: 2px solid var(--wood-dark);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+  overflow: hidden;
+}
+
+#drawer-handle {
+  background: linear-gradient(180deg, #8b5e3c, #6b4226);
+  padding: 8px 12px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  user-select: none;
+  border-bottom: 2px solid var(--wood-dark);
+  transition: background 0.2s;
+}
+
+#drawer-handle:hover { background: linear-gradient(180deg, #9b6e4c, #7b5236); }
+
+#drawer-handle span {
+  font-family: 'Special Elite', serif;
+  color: var(--text-light);
+  font-size: 0.78rem;
+  letter-spacing: 1px;
+}
+
+#drawer-arrow {
+  color: var(--text-light);
+  font-size: 0.75rem;
+  transition: transform 0.3s;
+}
+
+/* Rotate arrow when open */
+#tools-drawer.open #drawer-arrow { transform: rotate(180deg); }
+
+/* Sliding drawer content */
+#drawer-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease;
+}
+
+#tools-drawer.open #drawer-content { max-height: 200px; }
+
+/* 4-column grid of tool icons */
+.tools-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+  padding: 10px;
+}
+
+.tool-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  cursor: pointer;
+  padding: 6px 4px;
+  background: rgba(255,255,255,0.07);
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.1);
+  transition: all 0.2s;
+  user-select: none;
+}
+
+.tool-item:hover {
+  background: rgba(255,255,255,0.18);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+}
+
+.tool-item.selected {
+  background: rgba(79,195,247,0.2);
+  border-color: var(--glow-blue);
+  box-shadow: 0 0 8px rgba(79,195,247,0.4);
+}
+
+.tool-icon { font-size: 1.4rem; line-height: 1; }
+.tool-name { font-size: 0.51rem; color: var(--text-light); text-align: center; line-height: 1.2; }
+
+/* ── Experiment Selector Buttons ── */
+#exp-selector {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  padding: 6px;
+  background: rgba(0,0,0,0.1);
+  border-radius: 6px;
+  border: 1px solid rgba(100,60,20,0.22);
+}
+
+.exp-btn {
+  flex: 1;
+  min-width: 80px;
+  padding: 5px 6px;
+  background: linear-gradient(180deg, #7a4f2d, #5a3015);
+  border: 1px solid var(--wood-dark);
+  border-radius: 5px;
+  color: var(--text-light);
+  font-family: 'Nunito', sans-serif;
+  font-size: 0.63rem;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+  font-weight: 700;
+}
+
+.exp-btn:hover {
+  background: linear-gradient(180deg, #9b6e4c, #7b5236);
+  transform: translateY(-1px);
+}
+
+.exp-btn.active {
+  background: linear-gradient(180deg, #1a6b3a, #0d3d20);
+  border-color: #2d9a55;
+  box-shadow: 0 0 8px rgba(45,154,85,0.45);
+}
+
+/* ══════════════════════════════
+   9. CENTER SECTION — EXPERIMENT TABLE
+══════════════════════════════ */
+#experiment-area {
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* The table */
+#lab-table {
+  flex: 1;
+  background: linear-gradient(180deg, #f0ebe0, #e8dcc8 80%, #d4c5a0);
+  border-radius: 8px;
+  border: 3px solid var(--table-border);
+  box-shadow:
+    0 6px 22px rgba(0,0,0,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.65),
+    inset 0 -3px 8px rgba(0,0,0,0.08);
+  position: relative;
+  overflow: hidden;
+  min-height: 340px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* faint grid lines on table surface */
+#lab-table::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, transparent 0px, transparent 59px, rgba(0,0,0,0.035) 59px, rgba(0,0,0,0.035) 60px);
+  pointer-events: none;
+}
+
+#table-label {
+  position: absolute;
+  top: 8px; left: 50%;
+  transform: translateX(-50%);
+  font-family: 'Special Elite', serif;
+  color: rgba(100,60,20,0.3);
+  font-size: 0.82rem;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.table-leg {
+  position: absolute;
+  bottom: -15px;
+  width: 14px; height: 18px;
+  background: linear-gradient(90deg, var(--wood-dark), #7a5030, var(--wood-dark));
+  border-radius: 0 0 4px 4px;
+}
+
+.left-leg  { left: 18px; }
+.right-leg { right: 18px; }
+
+/* Scrollable workspace inside table */
+#workspace {
+  flex: 1;
+  position: relative;
+  padding: 38px 14px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  gap: 12px;
+  overflow-y: auto;
+  max-height: 310px;
+}
+
+/* Reaction zone at bottom of workspace */
+#reaction-zone {
+  width: 100%;
+  min-height: 68px;
+  background: rgba(255,255,255,0.28);
+  border: 2px dashed rgba(100,60,20,0.22);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px;
+  position: relative;
+  overflow: hidden;
+  margin-top: auto;
+  transition: background 1.5s ease, border-color 1s ease;
+}
+
+#rz-hint {
+  font-size: 0.72rem;
+  color: rgba(100,60,20,0.5);
+  font-family: 'Caveat', cursive;
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+/* Items placed on table */
+.placed-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  animation: place-bounce 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  cursor: pointer;
+  position: relative;
+}
+
+@keyframes place-bounce {
+  from { transform: translateY(-28px) scale(0.7); opacity: 0; }
+  to   { transform: translateY(0) scale(1);        opacity: 1; }
+}
+
+.placed-item .item-label {
+  font-size: 0.6rem;
+  color: #5a3a1a;
+  font-weight: 700;
+  background: rgba(255,255,255,0.7);
+  padding: 1px 5px;
+  border-radius: 10px;
+  white-space: nowrap;
+}
+
+/* Mini bottle rendered on table */
+.placed-bottle {
+  width: 26px; height: 42px;
+  border-radius: 3px 3px 5px 5px;
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset 2px 0 4px rgba(255,255,255,0.3),
+    0 3px 8px rgba(0,0,0,0.25);
+  border: 1px solid rgba(255,255,255,0.35);
+}
+
+.placed-liquid {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 65%;
+}
+
+.placed-glass-sheen {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, transparent 50%);
+  pointer-events: none;
+}
+
+/* ── Action Buttons ── */
+.action-row {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  flex: 1;
+  padding: 8px 10px;
+  border: none;
+  border-radius: 6px;
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+  font-size: 0.73rem;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.start-btn {
+  background: linear-gradient(135deg, #1a6b3a, #0d4a22);
+  color: #f5e6c8;
+  border: 1px solid #2d9a55;
+  box-shadow: 0 3px 10px rgba(26,107,58,0.4);
+}
+
+.start-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(26,107,58,0.55);
+}
+
+.start-btn:active { transform: translateY(0); }
+
+.clear-btn {
+  background: linear-gradient(135deg, #7a1010, #5a0808);
+  color: #f5e6c8;
+  border: 1px solid #c03030;
+  box-shadow: 0 3px 10px rgba(122,16,16,0.4);
+}
+
+.clear-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(122,16,16,0.5);
+}
+
+/* ══════════════════════════════
+   10. RIGHT SECTION — BLACKBOARD
+══════════════════════════════ */
+#blackboard-section {
+  padding: 12px 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+#blackboard {
+  flex: 1;
+  background: linear-gradient(135deg, #2d5a3d, #1e3d2a, #264d36);
+  border: 6px solid var(--board-frame);
+  border-radius: 4px;
+  box-shadow:
+    inset 0 0 32px rgba(0,0,0,0.28),
+    0 6px 22px rgba(0,0,0,0.45),
+    inset 0 1px 0 rgba(255,255,255,0.04);
+  padding: 14px 13px;
+  position: relative;
+  overflow: hidden;
+  min-height: 320px;
+}
+
+/* chalk-dust atmospheric glows */
+#blackboard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 80% at 20% 20%, rgba(255,255,255,0.018) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 40% at 80% 70%, rgba(255,255,255,0.012) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+/* chalk tray ledge */
+#blackboard::after {
+  content: '';
+  position: absolute;
+  bottom: -2px; left: -6px; right: -6px;
+  height: 13px;
+  background: linear-gradient(180deg, #6b4226, var(--wood-dark));
+  border-radius: 0 0 2px 2px;
+}
+
+/* chalk smudge marks */
+.chalk-smudge {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.025);
+  pointer-events: none;
+}
+
+/* Blackboard text styles */
+.board-title {
+  font-family: 'Caveat', cursive;
+  color: var(--chalk-white);
+  font-size: 1.05rem;
+  font-weight: 700;
+  text-align: center;
+  margin-bottom: 8px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  text-shadow: 0 0 8px rgba(240,235,224,0.3);
+  letter-spacing: 1px;
+}
+
+.chalk-line {
+  border: none;
+  border-top: 1px dashed var(--chalk-dim);
+  margin: 8px 0;
+}
+
+.board-section { margin-bottom: 8px; }
+
+.board-section-title {
+  font-family: 'Caveat', cursive;
+  color: var(--chalk-yellow);
+  font-size: 0.82rem;
+  margin-bottom: 3px;
+  text-shadow: 0 0 6px rgba(240,192,96,0.4);
+}
+
+.board-text {
+  font-family: 'Caveat', cursive;
+  color: #e8e0d0;
+  font-size: 0.76rem;
+  line-height: 1.65;
+  text-shadow: 0 0 4px rgba(232,224,208,0.18);
+}
+
+/* Step list items animate in with chalk-write effect */
+.step-item {
+  display: flex;
+  gap: 5px;
+  opacity: 0;
+  animation: chalk-write 0.4s ease forwards;
+}
+
+@keyframes chalk-write {
+  from { opacity: 0; transform: translateX(-5px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+.step-num {
+  color: var(--chalk-yellow);
+  font-family: 'Caveat', cursive;
+  font-size: 0.76rem;
+  min-width: 16px;
+}
+
+/* ══════════════════════════════
+   11. REACTION ANIMATIONS
+══════════════════════════════ */
+@keyframes rise-bubble {
+  0%   { transform: translateY(0)    scale(1);   opacity: 0.75; }
+  100% { transform: translateY(-120px) scale(0.2); opacity: 0;    }
+}
+
+@keyframes rise-smoke {
+  0%   { transform: translate(0, 0)        scale(1);   opacity: 0.55; }
+  100% { transform: translate(var(--dx), -80px) scale(3); opacity: 0;    }
+}
+
+@keyframes fall-precipitate {
+  to { transform: translateY(55px); opacity: 0.25; }
+}
+
+/* ══════════════════════════════
+   12. STATUS BAR (FOOTER)
+══════════════════════════════ */
+#status-bar {
+  grid-row: 3;
+  background: linear-gradient(90deg, #1e0e04, #2a1408, #1e0e04);
+  padding: 5px 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-top: 2px solid #5a3015;
+  z-index: 50;
+}
+
+/* blinking green dot */
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: #2d9a55;
+  box-shadow: 0 0 6px #2d9a55;
+  flex-shrink: 0;
+  animation: dot-blink 2.5s ease-in-out infinite;
+}
+
+@keyframes dot-blink {
+  0%,100% { opacity: 1; }
+  50%      { opacity: 0.25; }
+}
+
+#status-text {
+  font-family: 'Caveat', cursive;
+  color: var(--accent-gold);
+  font-size: 0.88rem;
+  flex: 1;
+}
+
+.status-meta {
+  font-size: 0.62rem;
+  color: #a08060;
+  font-family: 'Caveat', cursive;
+  white-space: nowrap;
+}
+
+/* ══════════════════════════════
+   13. TOAST NOTIFICATION
+══════════════════════════════ */
+#toast {
+  position: fixed;
+  top: 58px; left: 50%;
+  transform: translateX(-50%) translateY(-16px);
+  background: linear-gradient(135deg, #1a3d2a, #0d2218);
+  color: var(--accent-gold);
+  padding: 9px 22px;
+  border-radius: 8px;
+  font-family: 'Caveat', cursive;
+  font-size: 1rem;
+  border: 1px solid #2d9a55;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.55);
+  opacity: 0;
+  transition: opacity 0.3s, transform 0.3s;
+  z-index: 9000;
+  pointer-events: none;
+  white-space: nowrap;
+  max-width: 90vw;
+  text-align: center;
+}
+
+#toast.show {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* ══════════════════════════════
+   14. SCROLLBARS
+══════════════════════════════ */
+::-webkit-scrollbar        { width: 5px; }
+::-webkit-scrollbar-track  { background: rgba(0,0,0,0.1); }
+::-webkit-scrollbar-thumb  { background: var(--wood-mid); border-radius: 3px; }
