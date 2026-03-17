@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>ChemLab Simulator – Virtual Chemistry Laboratory</title>
+<link href="https://fonts.googleapis.com/css2?family=Special+Elite&family=Caveat:wght@400;600;700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<!-- ═══ REGISTRATION ═══ -->
+<div id="registration-screen">
+  <div class="reg-bg-overlay"></div>
+  <div class="reg-card">
+    <div class="reg-icon">⚗️</div>
+    <h1 class="reg-title">Chem<span>Lab</span> Simulator</h1>
+    <p class="reg-subtitle">Virtual Chemistry Laboratory — B.Tech Mini Project</p>
+    <div class="reg-divider"></div>
+    <form id="reg-form" novalidate>
+      <div class="form-group">
+        <label for="student-name">👨‍🎓 Student Name</label>
+        <input type="text" id="student-name" placeholder="Enter your full name" autocomplete="off" maxlength="60"/>
+        <span class="field-error" id="name-error"></span>
+      </div>
+      <div class="form-group">
+        <label for="roll-number">🎫 Roll Number <small>(exactly 4 digits)</small></label>
+        <input type="text" id="roll-number" placeholder="e.g. 2354" autocomplete="off" maxlength="4" inputmode="numeric"/>
+        <span class="field-error" id="roll-error"></span>
+      </div>
+      <button type="submit" class="reg-submit-btn">🔬 Enter the Lab</button>
+    </form>
+    <p class="reg-note">Fill in your credentials to access the virtual chemistry lab</p>
+  </div>
+</div>
+
+<!-- ═══ SAFETY MODAL ═══ -->
+<div id="safety-modal">
+  <div class="sm-card">
+    <div class="sm-icon">⚠️</div>
+    <div class="sm-title">Safety Equipment Required!</div>
+    <div class="sm-body" id="sm-body">Equip all required safety gear before starting this reaction.</div>
+    <div class="sm-items" id="sm-items"></div>
+    <button class="sm-btn" onclick="closeSafetyModal()">Got it — I'll equip them first.</button>
+  </div>
+</div>
+
+<!-- ═══ LAB ROOM ═══ -->
+<div id="lab-room" class="hidden">
+
+  <header id="header">
+    <div class="header-left">
+      <span class="header-logo">⚗️</span>
+      <h1>Chem<span>Lab</span> Simulator</h1>
+    </div>
+    <div id="student-badge">
+      <span id="badge-name"></span><span class="badge-sep">|</span><span id="badge-roll"></span>
+    </div>
+    <div class="header-right">
+      <span id="voice-status">Click mic to speak</span>
+      <button class="voice-btn" id="voice-btn" onclick="toggleVoice()" title="Voice Command">🎤</button>
+    </div>
+  </header>
+
+  <div class="wall-light left-light"><div class="light-base"></div><div class="light-arm"></div><div class="light-globe"></div></div>
+  <div class="wall-light right-light"><div class="light-base"></div><div class="light-arm"></div><div class="light-globe"></div></div>
+
+  <div id="thermometer-wall">
+    <div class="thermo-label">TEMP</div>
+    <div id="thermometer">
+      <div id="thermo-track"><div id="thermo-fill"></div></div>
+      <div id="thermo-bulb"></div>
+      <input type="range" id="thermo-slider" min="20" max="100" value="25" orient="vertical" oninput="updateTemp(this.value)"/>
+    </div>
+    <div id="temp-display">25°C</div>
+  </div>
+
+  <div id="lab-layout">
+
+    <!-- ══ LEFT: CHEMICAL STORAGE ══ -->
+    <section id="shelf-section">
+
+      <!-- ── CHEMICAL STORAGE HEADER + SEARCH ── -->
+      <div class="shelf-header-block">
+        <div class="shelf-label">🧪 Chemical Storage</div>
+        <!-- Search bar — filters bottles by name/formula/id -->
+        <div class="chem-search-wrap">
+          <span class="chem-search-icon">🔍</span>
+          <input
+            type="text"
+            id="chem-search"
+            class="chem-search-input"
+            placeholder="Search chemical…"
+            autocomplete="off"
+            oninput="filterBottles(this.value)"
+          />
+          <button class="chem-search-clear" id="chem-search-clear" onclick="clearSearch()" title="Clear">✕</button>
+        </div>
+        <!-- "No results" message shown by JS -->
+        <div id="search-no-result" class="search-no-result hidden">No chemicals found</div>
+      </div>
+
+      <!--
+        ALL bottles from DB.chemicals are rendered here — 3 per row.
+        Rows are grouped into .shelf-unit planks (3 per plank).
+        The whole area scrolls so all 10+ chemicals are reachable.
+        JS also shows/hides bottles based on the search query.
+      -->
+      <div id="shelf-scroll-area">
+        <!-- Filled dynamically by buildShelf() -->
+      </div>
+
+      <!-- TOOL + SAFETY DRAWER -->
+      <div id="tools-drawer">
+        <div id="drawer-handle" onclick="toggleDrawer()">
+          <span>🔧 Lab Tools &amp; Safety</span><span id="drawer-arrow">▼</span>
+        </div>
+        <div id="drawer-content">
+          <div class="tools-grid">
+            <div class="tool-item" data-name="Beaker"    data-icon="🧫" onclick="selectTool(this)"><div class="tool-icon">🧫</div><div class="tool-name">Beaker</div></div>
+            <div class="tool-item" data-name="Test Tube" data-icon="🧪" onclick="selectTool(this)"><div class="tool-icon">🧪</div><div class="tool-name">Test Tube</div></div>
+            <div class="tool-item" data-name="Flask"     data-icon="⚗️" onclick="selectTool(this)"><div class="tool-icon">⚗️</div><div class="tool-name">C.Flask</div></div>
+            <div class="tool-item" data-name="Burner"    data-icon="🔥" onclick="selectTool(this)"><div class="tool-icon">🔥</div><div class="tool-name">Burner</div></div>
+            <div class="tool-item" data-name="Dropper"   data-icon="💧" onclick="selectTool(this)"><div class="tool-icon">💧</div><div class="tool-name">Dropper</div></div>
+            <div class="tool-item" data-name="Stirrer"   data-icon="🥄" onclick="selectTool(this)"><div class="tool-icon">🥄</div><div class="tool-name">Stirrer</div></div>
+            <div class="tool-item" data-name="Cylinder"  data-icon="📏" onclick="selectTool(this)"><div class="tool-icon">📏</div><div class="tool-name">Cylinder</div></div>
+            <div class="tool-item safety-item" data-name="Goggles"     data-icon="🥽" data-safety="true" onclick="selectTool(this)"><div class="tool-icon">🥽</div><div class="tool-name">Goggles</div></div>
+            <div class="tool-item safety-item" data-name="Gloves"      data-icon="🧤" data-safety="true" onclick="selectTool(this)"><div class="tool-icon">🧤</div><div class="tool-name">Gloves</div></div>
+            <div class="tool-item safety-item" data-name="Lab Coat"    data-icon="🥼" data-safety="true" onclick="selectTool(this)"><div class="tool-icon">🥼</div><div class="tool-name">Lab Coat</div></div>
+            <div class="tool-item safety-item" data-name="Face Shield" data-icon="🛡️" data-safety="true" onclick="selectTool(this)"><div class="tool-icon">🛡️</div><div class="tool-name">F.Shield</div></div>
+            <div class="tool-item safety-item" data-name="Fume Hood"   data-icon="💨" data-safety="true" onclick="selectTool(this)"><div class="tool-icon">💨</div><div class="tool-name">Fume Hood</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EXPERIMENT PRESETS -->
+      <div class="shelf-label" style="margin-top:5px">⚗️ Experiments</div>
+      <div id="exp-selector">
+        <button class="exp-btn active" onclick="loadPreset('acid_base',this)">Acid-Base</button>
+        <button class="exp-btn"        onclick="loadPreset('precipitation',this)">Precipitate</button>
+        <button class="exp-btn"        onclick="loadPreset('co2_fizz',this)">CO₂ Fizz</button>
+        <button class="exp-btn"        onclick="loadPreset('metal_acid',this)">Metal+Acid</button>
+        <button class="exp-btn"        onclick="loadPreset('esterification',this)">Ester</button>
+      </div>
+    </section>
+
+    <!-- ══ CENTER: WORKBENCH ══ -->
+    <section id="experiment-area">
+
+      <div id="workbench-board">
+        <div class="wb-board-title">✦ Experiment Workbench ✦</div>
+        <div class="chalk-eq" style="top:8%;left:2%;font-size:.65rem;transform:rotate(-4deg)">H₂+O→H₂O</div>
+        <div class="chalk-eq" style="top:16%;right:3%;font-size:.58rem;transform:rotate(3deg)">pH=-log[H⁺]</div>
+        <div class="chalk-eq" style="bottom:20%;left:2%;font-size:.6rem;transform:rotate(-2deg)">ΔG=ΔH−TΔS</div>
+        <div class="chalk-eq" style="bottom:12%;right:2%;font-size:.56rem;transform:rotate(2deg)">PV=nRT</div>
+        <div class="chalk-eq" style="top:52%;left:2%;font-size:.53rem;transform:rotate(-3deg)">Ka=[H⁺][A⁻]/[HA]</div>
+        <div id="active-eq-zone">
+          <div class="eq-type-badge" id="eq-type-badge" style="color:#a0f0c0;border-color:rgba(160,240,192,.35);background:rgba(160,240,192,.08)">NEUTRALIZATION</div>
+          <div class="eq-main" id="eq-main">HCl + NaOH → NaCl + H₂O</div>
+          <div class="eq-sub"  id="eq-sub">Acid + Base → Salt + Water  |  Exothermic  |  ΔH &lt; 0</div>
+        </div>
+        <hr class="wb-chalk-line"/>
+        <div id="secondary-eqs">
+          <span class="sec-eq">CuSO₄+2NaOH→Cu(OH)₂↓</span>
+          <span class="sec-eq">Mg+2HCl→MgCl₂+H₂↑</span>
+          <span class="sec-eq">CH₃COOH+NaHCO₃→CO₂↑</span>
+        </div>
+      </div>
+
+      <div id="safety-panel">
+        <div class="sp-title">🛡️ Safety:</div>
+        <div class="safety-items" id="safety-items-list"></div>
+      </div>
+
+      <!-- LAB TABLE -->
+      <div id="lab-table">
+        <div id="table-label">LAB  TABLE</div>
+        <div class="table-leg left-leg"></div>
+        <div class="table-leg right-leg"></div>
+
+        <!-- SELECTED chemicals strip — mini bottles sit here, tilt+fly on pour -->
+        <div id="selected-chemical-display">
+          <span class="scd-label">SELECTED:</span>
+          <span class="scd-empty" id="scd-empty">None — click a bottle</span>
+        </div>
+
+        <!-- VESSEL ZONE -->
+        <div id="vessel-zone">
+          <div id="vessel-wrap">
+            <div id="vessel-placeholder">
+              <span>🧫</span>
+              <p>Select Beaker or Test Tube</p>
+            </div>
+          </div>
+          <!-- Full-table canvas for pour animation -->
+          <canvas id="pour-canvas"></canvas>
+          <div id="beaker-contents"></div>
+        </div>
+
+        <!-- REACTION ZONE -->
+        <div id="reaction-zone">
+          <p id="rz-hint">💧 Select chemicals → Pour → click <strong>▶ React</strong></p>
+        </div>
+
+        <!-- REACTION RESULT -->
+        <div id="reaction-result">
+          <span class="rr-badge"   id="rr-badge">RESULT</span>
+          <span class="rr-formula" id="rr-formula"></span>
+          <span class="rr-obs"     id="rr-obs"></span>
+        </div>
+      </div>
+
+      <div class="action-row">
+        <button id="pour-chemical"  class="action-btn pour-btn"  onclick="pourChemical()"  disabled>💧 Pour</button>
+        <button id="start-reaction" class="action-btn start-btn" onclick="startReaction()" disabled>▶ React</button>
+        <button id="clear-table"    class="action-btn clear-btn" onclick="clearTable()">✕ Clear</button>
+        <button id="voice-command"  class="action-btn speak-btn" onclick="toggleVoice()">🎤 Voice</button>
+      </div>
+    </section>
+
+    <!-- ══ RIGHT: BLACKBOARD ══ -->
+    <section id="blackboard-section">
+      <div id="blackboard">
+        <div class="chalk-smudge" style="top:12%;left:55%;width:70px;height:28px"></div>
+        <div class="chalk-smudge" style="top:46%;left:4%;width:90px;height:18px"></div>
+        <div class="chalk-smudge" style="top:76%;left:62%;width:55px;height:22px"></div>
+        <div class="board-title" id="board-title">⚗ Acid – Base Reaction</div>
+        <hr class="chalk-line"/>
+        <div class="board-section">
+          <div class="board-section-title">📋 Overview</div>
+          <div class="board-text" id="board-overview"></div>
+        </div>
+        <hr class="chalk-line"/>
+        <div class="board-section">
+          <div class="board-section-title">🧪 Chemicals</div>
+          <div class="board-text" id="board-chemicals"></div>
+        </div>
+        <div class="board-section">
+          <div class="board-section-title">🔧 Tools</div>
+          <div class="board-text" id="board-tools"></div>
+        </div>
+        <div class="board-section">
+          <div class="board-section-title">🛡️ Safety</div>
+          <div class="board-text" id="board-safety"></div>
+        </div>
+        <hr class="chalk-line"/>
+        <div class="board-section">
+          <div class="board-section-title">📝 Procedure</div>
+          <div id="board-steps"></div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer id="status-bar">
+    <div class="status-dot"></div>
+    <div id="status-text">🔬 Lab Ready — Select chemicals and tools to begin.</div>
+    <div class="status-meta">
+      Temp: <span id="status-temp">25°C</span>&nbsp;|&nbsp;
+      Selected: <span id="status-items">0</span>&nbsp;|&nbsp;
+      Poured: <span id="status-poured">0</span>
+    </div>
+  </footer>
+</div>
+
+<div id="toast"></div>
+<script src="script.js"></script>
+</body>
+</html>
