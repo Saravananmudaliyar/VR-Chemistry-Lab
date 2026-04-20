@@ -161,6 +161,33 @@ async def websocket_voice_endpoint(websocket: WebSocket):
 async def get_state():
     return experiment_state.get_state()
 
+# New: React endpoint
+class ReactRequest(BaseModel):
+    chemicals: List[str]
+
+@app.post("/react")
+async def process_reaction(req: ReactRequest):
+    try:
+        reaction_result = reaction_engine.check_reaction(req.chemicals)
+        if reaction_result and reaction_result.get("reaction_occurred"):
+            return reaction_result
+        else:
+            # Fallback for acid mixes and other defaults from dataset, though check_reaction handles most
+            return {"reaction_occurred": False, "message": "No specific reaction detected."}
+    except Exception as e:
+        logger.error(f"React error: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/dataset")
+async def get_dataset():
+    """Return the entire dataset so the frontend can populate the shelf."""
+    try:
+        with open(os.path.join(os.path.dirname(__file__), "..", "data", "reactions.json"), "r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception as e:
+        logger.error(f"Dataset error: {str(e)}")
+        raise HTTPException(status_code=500, detail="Could not load dataset")
+
 # Reset experiment
 @app.post("/reset")
 async def reset_experiment():
