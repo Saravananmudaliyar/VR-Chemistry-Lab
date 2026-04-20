@@ -58,7 +58,7 @@ class ActionResponse(BaseModel):
 @app.on_event("startup")
 async def startup_event():
     try:
-        # Resolve path to the data folder
+        # Robust pathing for the dataset
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         dataset_path = os.path.join(base_dir, "data", "reactions.json")
 
@@ -80,19 +80,9 @@ async def startup_event():
 @app.post("/command", response_model=ActionResponse)
 async def process_command(cmd: CommandRequest):
     try:
-        # Parse natural language
         parsed = command_parser.parse(cmd.text)
-
-        # Execute experiment action
-        await experiment_state.execute_action(
-            parsed["action"],
-            parsed.get("params", {})
-        )
-
-        # Check reactions using dataset
-        reaction_result = reaction_engine.check_reaction(
-            experiment_state.get_chemicals()
-        )
+        await experiment_state.execute_action(parsed["action"], parsed.get("params", {}))
+        reaction_result = reaction_engine.check_reaction(experiment_state.get_chemicals())
 
         response = ActionResponse(
             action="command_executed",
@@ -101,20 +91,15 @@ async def process_command(cmd: CommandRequest):
             message="Command executed"
         )
 
-        # If dataset reaction occurs
         if reaction_result and reaction_result.get("reaction_occurred"):
             explanation = explanation_engine.generate_explanation(reaction_result)
-
             response.action = "reaction_started"
             response.chemicals = reaction_result.get("reactants", [])
             response.products = reaction_result.get("products", [])
             response.explanation = explanation.get("narrative", "")
             response.observable_effects = explanation.get("effects", [])
 
-            # Voice explanation
-            asyncio.create_task(
-                voice_assistant.speak(explanation.get("narrative", ""))
-            )
+            asyncio.create_task(voice_assistant.speak(explanation.get("narrative", "")))
 
         return response
     except Exception as e:
@@ -134,12 +119,10 @@ async def websocket_voice_endpoint(websocket: WebSocket):
     except WebSocketDisconnect:
         logger.info("VR client disconnected")
 
-# Get experiment state
 @app.get("/state")
 async def get_state():
     return experiment_state.get_state()
 
-# New: React endpoint
 class ReactRequest(BaseModel):
     chemicals: List[str]
 
@@ -149,15 +132,13 @@ async def process_reaction(req: ReactRequest):
         reaction_result = reaction_engine.check_reaction(req.chemicals)
         if reaction_result and reaction_result.get("reaction_occurred"):
             return reaction_result
-        else:
-            return {"reaction_occurred": False, "message": "No specific reaction detected."}
+        return {"reaction_occurred": False, "message": "No specific reaction detected."}
     except Exception as e:
         logger.error(f"React error: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/dataset")
 async def get_dataset():
-    """Return the entire dataset so the frontend can populate the shelf."""
     try:
         base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
         dataset_path = os.path.join(base_dir, "data", "reactions.json")
@@ -167,32 +148,30 @@ async def get_dataset():
         logger.error(f"Dataset error: {str(e)}")
         raise HTTPException(status_code=500, detail="Could not load dataset")
 
-# Reset experiment
 @app.post("/reset")
 async def reset_experiment():
     experiment_state.reset()
     return {"success": True, "message": "Experiment reset"}
 
-# Health check
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
 
 # --- FRONTEND MOUNTING ---
-# This serves your index.html and assets from the frontend folder
 try:
-    # Adjust directory path to find the 'frontend' folder relative to this file
+    # Resolve the 'frontend' folder path
     frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
+    # Mount the frontend at the root (/) path
     app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
     logger.info(f"Frontend successfully mounted from {frontend_path}")
 except Exception as e:
     logger.error(f"Failed to mount frontend: {e}")
 
-# Run server
+# Run server on port 8080
 if __name__ == "__main__":
     uvicorn.run(
         "server:app",
         host="0.0.0.0",
-        port=8000,
+        port=8080,
         reload=True
     )
