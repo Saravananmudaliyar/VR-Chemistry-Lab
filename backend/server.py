@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 import uvicorn
 import asyncio
@@ -56,21 +57,15 @@ class ActionResponse(BaseModel):
 # Startup
 @app.on_event("startup")
 async def startup_event():
-
     try:
-        # Correct path to your dataset
-        dataset_path = os.path.join(
-            os.path.dirname(__file__),
-            "..",
-            "data",
-            "reactions.json"
-        )
+        # Resolve path to the data folder
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        dataset_path = os.path.join(base_dir, "data", "reactions.json")
 
         logger.info(f"Loading reaction dataset from {dataset_path}")
 
         # Load dataset
         await dataset_loader.load_dataset(dataset_path)
-
         reactions = dataset_loader.get_reactions()
 
         # Pass dataset to systems
@@ -78,16 +73,13 @@ async def startup_event():
         explanation_engine.set_dataset(reactions)
 
         logger.info(f"Loaded {len(reactions)} reactions successfully")
-
     except Exception as e:
         logger.error(f"Startup error: {str(e)}")
 
 # Command processing
 @app.post("/command", response_model=ActionResponse)
 async def process_command(cmd: CommandRequest):
-
     try:
-
         # Parse natural language
         parsed = command_parser.parse(cmd.text)
 
@@ -111,7 +103,6 @@ async def process_command(cmd: CommandRequest):
 
         # If dataset reaction occurs
         if reaction_result and reaction_result.get("reaction_occurred"):
-
             explanation = explanation_engine.generate_explanation(reaction_result)
 
             response.action = "reaction_started"
@@ -126,33 +117,20 @@ async def process_command(cmd: CommandRequest):
             )
 
         return response
-
     except Exception as e:
-
         logger.error(f"Command error: {str(e)}")
-
-        raise HTTPException(
-            status_code=500,
-            detail=str(e)
-        )
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Websocket for VR voice interaction
 @app.websocket("/ws/voice")
 async def websocket_voice_endpoint(websocket: WebSocket):
-
     await websocket.accept()
-
     try:
         while True:
-
             data = await websocket.receive_text()
-
             cmd = CommandRequest(**json.loads(data))
-
             response = await process_command(cmd)
-
             await websocket.send_json(response.dict())
-
     except WebSocketDisconnect:
         logger.info("VR client disconnected")
 
@@ -172,7 +150,6 @@ async def process_reaction(req: ReactRequest):
         if reaction_result and reaction_result.get("reaction_occurred"):
             return reaction_result
         else:
-            # Fallback for acid mixes and other defaults from dataset, though check_reaction handles most
             return {"reaction_occurred": False, "message": "No specific reaction detected."}
     except Exception as e:
         logger.error(f"React error: {str(e)}")
@@ -182,7 +159,9 @@ async def process_reaction(req: ReactRequest):
 async def get_dataset():
     """Return the entire dataset so the frontend can populate the shelf."""
     try:
-        with open(os.path.join(os.path.dirname(__file__), "..", "data", "reactions.json"), "r", encoding="utf-8") as f:
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        dataset_path = os.path.join(base_dir, "data", "reactions.json")
+        with open(dataset_path, "r", encoding="utf-8") as f:
             return json.load(f)
     except Exception as e:
         logger.error(f"Dataset error: {str(e)}")
@@ -191,18 +170,23 @@ async def get_dataset():
 # Reset experiment
 @app.post("/reset")
 async def reset_experiment():
-
     experiment_state.reset()
-
-    return {
-        "success": True,
-        "message": "Experiment reset"
-    }
+    return {"success": True, "message": "Experiment reset"}
 
 # Health check
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
+
+# --- FRONTEND MOUNTING ---
+# This serves your index.html and assets from the frontend folder
+try:
+    # Adjust directory path to find the 'frontend' folder relative to this file
+    frontend_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend")
+    app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+    logger.info(f"Frontend successfully mounted from {frontend_path}")
+except Exception as e:
+    logger.error(f"Failed to mount frontend: {e}")
 
 # Run server
 if __name__ == "__main__":
