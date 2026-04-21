@@ -202,41 +202,82 @@
       </div>
 
       <!-- LAB TABLE -->
-      <div id="lab-table">
-        <div id="table-label">LAB  TABLE</div>
-        <div class="table-leg left-leg"></div>
-        <div class="table-leg right-leg"></div>
+      <div id="workbench">
+        <!-- The 3D Top Surface -->
+        <div class="table-surface">
+          <!-- Place your Beakers/Burners inside here -->
+          <div id="reaction-zone">
+            <p id="rz-hint">💧 Select chemicals → Pour → click <strong>▶ React</strong></p>
+          </div>
 
-        <!-- SELECTED chemicals strip — mini bottles sit here, tilt+fly on pour -->
-        <div id="selected-chemical-display">
-          <span class="scd-label">SELECTED:</span>
-          <span class="scd-empty" id="scd-empty">None — click a bottle</span>
-        </div>
-
-        <!-- VESSEL ZONE -->
-        <div id="vessel-zone">
-          <div id="vessel-wrap">
-            <div id="vessel-placeholder">
-              <span>🧫</span>
-              <p>Select Beaker or Test Tube</p>
+          <div class="table-slots">
+            <div id="vessel-zone">
+              <div id="vessel-wrap">
+                <div id="vessel-placeholder">
+                  <span>🧫</span>
+                  <p>Select Vessel</p>
+                </div>
+              </div>
+              <!-- Full-table canvas for pour animation -->
+              <canvas id="pour-canvas"></canvas>
+              <div id="beaker-contents"></div>
+            </div>
+            
+            <!-- Burner slot -->
+            <div class="table-slot empty-slot">
+              <p>Burner Slot</p>
             </div>
           </div>
-          <!-- Full-table canvas for pour animation -->
-          <canvas id="pour-canvas"></canvas>
-          <div id="beaker-contents"></div>
+
+          <div id="reaction-result">
+            <span class="rr-badge" id="rr-badge">RESULT</span>
+            <span class="rr-formula" id="rr-formula"></span>
+            <span class="rr-obs" id="rr-obs"></span>
+          </div>
+
+          <div id="selected-chemical-display">
+            <span class="scd-label">SELECTED:</span>
+            <span class="scd-empty" id="scd-empty">None — click a bottle</span>
+          </div>
+
+          <!-- STATIC DECORATIVE VESSELS (from prompt visually) -->
+          <div id="table-decorations">
+            <div class="decor-vessel decor-beaker">
+              <div class="decor-liquid clear-water"></div>
+              <div class="decor-label">250ml</div>
+              <div class="decor-glare"></div>
+            </div>
+            <div class="decor-flask">
+              <div class="decor-flask-neck"><div class="decor-glare"></div></div>
+              <div class="decor-flask-bulb">
+                <div class="decor-liquid copper-sulfate"></div>
+                <div class="decor-glare" style="height:60%; top:20%; left:15%;"></div>
+              </div>
+            </div>
+            <div class="decor-vessel decor-jar">
+              <div class="decor-jar-lid"></div>
+              <div class="decor-crystals"></div>
+              <div class="decor-glare"></div>
+            </div>
+          </div>
+
+          <div class="surface-reflection"></div>
         </div>
 
-        <!-- REACTION ZONE -->
-        <div id="reaction-zone">
-          <p id="rz-hint">💧 Select chemicals → Pour → click <strong>▶ React</strong></p>
-        </div>
+        <!-- The Thickness of the wood -->
+        <div class="table-edge"></div>
 
-        <!-- REACTION RESULT -->
-        <div id="reaction-result">
-          <span class="rr-badge"   id="rr-badge">RESULT</span>
-          <span class="rr-formula" id="rr-formula"></span>
-          <span class="rr-obs"     id="rr-obs"></span>
+        <!-- The Front Face with the Drawer -->
+        <div class="table-front">
+          <div class="drawer-handle">
+            <span class="screw left"></span>
+            DRAWER ID
+            <span class="screw right"></span>
+          </div>
         </div>
+        
+        <!-- Floor Shadow -->
+        <div class="floor-shadow"></div>
       </div>
 
       <div class="action-row">
