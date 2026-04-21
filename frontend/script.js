@@ -403,21 +403,73 @@ const EXPERIMENTS_TABLE = {
 };
 
 async function fetchDataset() {
-  try {
-    const res = await fetch('http://localhost:8000/dataset');
-    const data = await res.json();
-    DB.chemicals = data.chemicals;
-    DB.reactions = data.reactions;
-    DB.shelfOrder = data.shelfOrder;
-    buildShelf();
-    /* NOTE: We do NOT call loadPreset here — the overlay should only 
-       appear after the user has logged in and clicked an experiment */
-  } catch (e) {
-    console.error('Failed to load dataset from backend', e);
-    showToast('⚠️ Could not connect to backend! Start server.py');
-  }
+    console.log('🔄 Loading dataset...');
+    
+    // First try: Load local reactions.json file
+    try {
+        const response = await fetch('reactions.json');
+        if (response.ok) {
+            const data = await response.json();
+            DB.chemicals = data.chemicals || {};
+            DB.reactions = data.reactions || {};
+            DB.shelfOrder = data.shelfOrder || [];
+            buildShelf();
+            console.log('✅ Loaded from reactions.json');
+            return;
+        }
+    } catch(e) {
+        console.log('reactions.json not found, trying backend...');
+    }
+    
+    // Second try: Backend endpoint
+    try {
+        const res = await fetch('/dataset');
+        if (res.ok) {
+            const data = await res.json();
+            DB.chemicals = data.chemicals || {};
+            DB.reactions = data.reactions || {};
+            DB.shelfOrder = data.shelfOrder || [];
+            buildShelf();
+            console.log('✅ Loaded from backend');
+            return;
+        }
+    } catch(e) {
+        console.log('Backend not available');
+    }
+    
+    // If both fail
+    console.error('❌ Could not load dataset from anywhere!');
+    showToast('⚠️ Could not load chemicals. Make sure reactions.json is in the folder!');
 }
-
+// Add this function after fetchDataset()
+function loadLocalReactionsJson() {
+    console.log('📦 Loading your reactions.json file...');
+    
+    fetch('reactions.json')
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status} - File not found`);
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('✅ reactions.json loaded successfully!');
+            console.log('   Chemicals found:', Object.keys(data.chemicals || {}).length);
+            console.log('   Reactions found:', Object.keys(data.reactions || {}).length);
+            
+            DB.chemicals = data.chemicals || {};
+            DB.reactions = data.reactions || {};
+            DB.shelfOrder = data.shelfOrder || [];
+            
+            buildShelf();
+            showToast('✅ ' + Object.keys(DB.chemicals).length + ' chemicals loaded!');
+        })
+        .catch(error => {
+            console.error('❌ Could not load reactions.json:', error);
+            console.log('   Make sure reactions.json is in the same folder as index.html');
+            showToast('⚠️ reactions.json not found! Check file location.');
+        });
+}
 /* ══════════════════════════════════════════════════
    STATE
 ══════════════════════════════════════════════════ */
