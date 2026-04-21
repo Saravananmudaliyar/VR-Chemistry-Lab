@@ -2003,3 +2003,30 @@ window.pourChemical = function() {
 
 /* ManualGuide reaction completion is handled inside startReaction
    via ManualGuide.complete(expData) — no extra hook needed here. */
+
+function exitLab() {
+    const labRoom = document.getElementById("lab-room");
+    const regScreen = document.getElementById("registration-screen");
+
+    labRoom.style.transition = "opacity 0.3s ease";
+    labRoom.style.opacity = "0";
+
+    setTimeout(() => {
+        labRoom.classList.add("hidden");
+        labRoom.style.opacity = "";
+        labRoom.style.transition = "";
+
+        regScreen.classList.remove("hidden");
+        regScreen.style.opacity = "0";
+        regScreen.style.transition = "opacity 0.3s ease";
+
+        requestAnimationFrame(() => {
+            regScreen.style.opacity = "1";
+        });
+
+        setTimeout(() => {
+            regScreen.style.opacity = "";
+            regScreen.style.transition = "";
+        }, 300);
+    }, 300);
+}
