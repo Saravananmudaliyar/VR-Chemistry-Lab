@@ -39,16 +39,7 @@
         <input type="text" id="student-name" placeholder="Enter your full name" autocomplete="off" maxlength="60"/>
         <span class="field-error" id="name-error"></span>
       </div>
-      <div class="form-group">
-        <label for="student-standard">📚 Standard</label>
-        <select id="student-standard" style="width: 100%; padding: 0.8rem 1rem; border: 2px solid rgba(160,240,192,.3); background: rgba(0,0,0,0.6); color: #fff; border-radius: 8px; font-family: 'Nunito', sans-serif; font-size: 1rem; margin-top: 5px; outline: none; appearance: none; -webkit-appearance: none;">
-          <option value="" disabled selected>Select your class</option>
-          <option value="10">Class 10</option>
-          <option value="11">Class 11</option>
-          <option value="12">Class 12</option>
-        </select>
-        <span class="field-error" id="standard-error"></span>
-      </div>
+
       <div class="form-group">
         <label for="roll-number">🎫 Roll Number <small>(exactly 4 digits)</small></label>
         <input type="text" id="roll-number" placeholder="e.g. 2354" autocomplete="off" maxlength="4" inputmode="numeric"/>
@@ -80,7 +71,7 @@
       <h1>Chem<span>Lab</span> Simulator</h1>
     </div>
     <div id="student-badge">
-      <span id="badge-name"></span><span class="badge-sep">|</span><span id="badge-std"></span><span class="badge-sep">|</span><span id="badge-roll"></span>
+      <span id="badge-name"></span><span class="badge-sep">|</span><span id="badge-roll"></span>
     </div>
     <div class="header-right">
       <span id="voice-status" style="display:none;"></span>

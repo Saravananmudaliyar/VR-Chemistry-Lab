@@ -405,7 +405,51 @@ const EXPERIMENTS_TABLE = {
 async function fetchDataset() {
     console.log('🔄 Loading dataset...');
     
-    // First try: Load local reactions.json file
+    // First try: Backend endpoint Check
+    try {
+        const res = await fetch('http://localhost:8080/dataset');
+        if (res.ok) {
+            const data = await res.json();
+            DB.chemicals = data.chemicals || {};
+            DB.reactions = data.reactions || {};
+            DB.shelfOrder = data.shelfOrder || [];
+            buildShelf();
+            console.log('✅ Loaded from backend');
+            return;
+        }
+    } catch(e) {
+        console.log('Backend not available natively');
+    }
+
+    // Second try: /dataset directly
+    try {
+        const res = await fetch('/dataset');
+        if (res.ok) {
+            const data = await res.json();
+            DB.chemicals = data.chemicals || {};
+            DB.reactions = data.reactions || {};
+            DB.shelfOrder = data.shelfOrder || [];
+            buildShelf();
+            console.log('✅ Loaded from /dataset route');
+            return;
+        }
+    } catch(e) {}
+
+    // Third try: Correct relative path
+    try {
+        const response = await fetch('../data/reactions.json');
+        if (response.ok) {
+            const data = await response.json();
+            DB.chemicals = data.chemicals || {};
+            DB.reactions = data.reactions || {};
+            DB.shelfOrder = data.shelfOrder || [];
+            buildShelf();
+            console.log('✅ Loaded from ../data/reactions.json');
+            return;
+        }
+    } catch(e) {}
+    
+    // Fourth try: Fallback local location
     try {
         const response = await fetch('reactions.json');
         if (response.ok) {
@@ -417,58 +461,10 @@ async function fetchDataset() {
             console.log('✅ Loaded from reactions.json');
             return;
         }
-    } catch(e) {
-        console.log('reactions.json not found, trying backend...');
-    }
+    } catch(e) {}
     
-    // Second try: Backend endpoint
-    try {
-        const res = await fetch('/dataset');
-        if (res.ok) {
-            const data = await res.json();
-            DB.chemicals = data.chemicals || {};
-            DB.reactions = data.reactions || {};
-            DB.shelfOrder = data.shelfOrder || [];
-            buildShelf();
-            console.log('✅ Loaded from backend');
-            return;
-        }
-    } catch(e) {
-        console.log('Backend not available');
-    }
-    
-    // If both fail
     console.error('❌ Could not load dataset from anywhere!');
-    showToast('⚠️ Could not load chemicals. Make sure reactions.json is in the folder!');
-}
-// Add this function after fetchDataset()
-function loadLocalReactionsJson() {
-    console.log('📦 Loading your reactions.json file...');
-    
-    fetch('reactions.json')
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status} - File not found`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('✅ reactions.json loaded successfully!');
-            console.log('   Chemicals found:', Object.keys(data.chemicals || {}).length);
-            console.log('   Reactions found:', Object.keys(data.reactions || {}).length);
-            
-            DB.chemicals = data.chemicals || {};
-            DB.reactions = data.reactions || {};
-            DB.shelfOrder = data.shelfOrder || [];
-            
-            buildShelf();
-            showToast('✅ ' + Object.keys(DB.chemicals).length + ' chemicals loaded!');
-        })
-        .catch(error => {
-            console.error('❌ Could not load reactions.json:', error);
-            console.log('   Make sure reactions.json is in the same folder as index.html');
-            showToast('⚠️ reactions.json not found! Check file location.');
-        });
+    showToast('⚠️ Could not load chemicals. Make sure reactions.json is accessible!');
 }
 /* ══════════════════════════════════════════════════
    STATE
@@ -478,6 +474,7 @@ let selectedTools     = [];   // { name, icon, isSafety }
 let pouredChemicals   = [];   // chemicals added to vessel — SINGLE SOURCE OF TRUTH for reaction lookup
 let vesselType        = null;
 let temperature       = 25;
+let hasReacted        = false; // Tracks if the current vessel contents have been reacted
 let isReacting        = false;
 let isPouring         = false;
 let speechRecog       = null;
@@ -487,8 +484,51 @@ let speechRecog       = null;
    When called from startReaction → uses all poured IDs
    When called from refreshBoard  → uses all selected IDs (preview only)
 ══════════════════════════════════════════════════ */
+function createDefaultReaction(ids) {
+  if (!ids || ids.length === 0) {
+    return {
+      title: "Unknown Reaction",
+      formula: "No chemicals \u2192 ?",
+      sub: "Add chemicals to observe an effect",
+      badge: "EMPTY",
+      badgeColor: "#cccccc",
+      effect: "none",
+      liquidColor: "rgba(200,240,255,0.1)",
+      bgColor: "#eeeeee",
+      overview: "No chemicals have been added yet.",
+      chemNames: "",
+      tools: "",
+      safety: "",
+      steps: [],
+      observation: "Nothing to observe.",
+      requiredSafety: ["Goggles"]
+    };
+  }
+  const names = ids.map(id => DB.chemicals[id] ? DB.chemicals[id].name : id);
+  return {
+      title: "Chemical Mixture",
+      formula: ids.join(" + ") + " \u2192 Mixture",
+      sub: "No violent reaction | Stable Mixture",
+      badge: "MIXTURE",
+      badgeColor: "#a0a0a0",
+      effect: "dissolve",
+      liquidColor: "rgba(180,200,220,0.8)",
+      bgColor: "#d0e0f0",
+      overview: "These chemicals mix together without a strongly defined reaction in the database.",
+      chemNames: names.map(n => '\u2022 ' + n).join('<br>'),
+      tools: "\u2022 Beaker",
+      safety: "\u2022 Goggles  \u2022 Gloves",
+      steps: [
+        "Mix the chemicals gently.",
+        "Observe the mixture for any delayed changes."
+      ],
+      observation: "A stable mixture is formed with no immediate vigorous reaction. The outcome is safe.",
+      requiredSafety: ["Goggles", "Gloves"]
+  };
+}
+
 function lookupReaction(ids) {
-  if (!ids || ids.length === 0) return DB.reactions['DEFAULT'];
+  if (!ids || ids.length === 0) return createDefaultReaction([]);
   const sorted = [...ids].sort();
   const keys = [];
 
@@ -503,15 +543,12 @@ function lookupReaction(ids) {
   }
 
   // 3. Try singles ONLY if there is exactly one chemical
-  //    If multiple chemicals are selected/poured and no combo found → DEFAULT
-  //    This prevents the board from showing a single-chem reaction when
-  //    the user has added two chemicals that have no reaction in the database.
   if (sorted.length === 1) {
     sorted.forEach(id => keys.push(id));
   }
 
   for (const k of keys) if (DB.reactions[k]) return DB.reactions[k];
-  return DB.reactions['DEFAULT'];
+  return DB.reactions['DEFAULT'] || createDefaultReaction(ids);
 }
 
 /* ══════════════════════════════════════════════════
@@ -520,20 +557,16 @@ function lookupReaction(ids) {
 document.getElementById('reg-form').addEventListener('submit', function (e) {
   e.preventDefault();
   const nameIn  = document.getElementById('student-name');
-  const stdIn   = document.getElementById('student-standard');
   const rollIn  = document.getElementById('roll-number');
   const nameErr = document.getElementById('name-error');
-  const stdErr  = document.getElementById('standard-error');
   const rollErr = document.getElementById('roll-error');
-  nameErr.textContent = ''; rollErr.textContent = ''; stdErr.textContent = '';
-  nameIn.classList.remove('input-error'); rollIn.classList.remove('input-error'); stdIn.classList.remove('input-error');
+  nameErr.textContent = ''; rollErr.textContent = '';
+  nameIn.classList.remove('input-error'); rollIn.classList.remove('input-error');
   let valid = true;
   if (!nameIn.value.trim()) { nameErr.textContent = '⚠️ Name cannot be empty.'; nameIn.classList.add('input-error'); valid = false; }
-  if (!stdIn.value) { stdErr.textContent = '⚠️ Please select your class standard.'; stdIn.classList.add('input-error'); valid = false; }
   if (!/^\d{4}$/.test(rollIn.value.trim())) { rollErr.textContent = '⚠️ Roll number must be exactly 4 digits.'; rollIn.classList.add('input-error'); valid = false; }
   if (!valid) return;
   document.getElementById('badge-name').textContent = nameIn.value.trim();
-  document.getElementById('badge-std').textContent = 'Std: ' + stdIn.value;
   document.getElementById('badge-roll').textContent = 'Roll: ' + rollIn.value.trim();
   const reg = document.getElementById('registration-screen');
   const lab = document.getElementById('lab-room');
@@ -631,7 +664,8 @@ function selectChemical(el) {
   }
 
   document.getElementById('pour-chemical').disabled = selectedChemicals.length === 0;
-  if (selectedChemicals.length > 0) refreshBoardFromIds(selectedChemicals.map(c => c.id));
+  const previewIds = pouredChemicals.map(c => c.id).concat(selectedChemicals.filter(c => !pouredChemicals.find(p => p.id === c.id)).map(c => c.id));
+  if (previewIds.length > 0) refreshBoardFromIds(previewIds);
   updateStatusBar();
 }
 
@@ -696,9 +730,40 @@ function updateSelectedDisplay() {
 function refreshBoardFromIds(ids) {
   if (ids.length === 0) return;
   const rxn = lookupReaction(ids);
-  updateWorkbenchBoard(rxn);
+  
+  if (!hasReacted) {
+    updateWorkbenchBoard({
+      badge: "PREPARING MIXTURE",
+      badgeColor: "#cccccc",
+      formula: ids.join(" + ") + " \u2192 ?",
+      sub: "Add all required chemicals, select a vessel, and click ▶ React!"
+    });
+  } else {
+    // If it already reacted and we are just refreshing (though theoretically we'd just want to keep the final board)
+    updateWorkbenchBoard(rxn);
+  }
+
   updateBlackboard(rxn);
   renderSafetyPanel(rxn.requiredSafety);
+}
+
+const typewriterTimeouts = { main: null, sub: null };
+
+function typewriterEffect(elementId, text, speed = 40, timeoutRefObj, timeoutRefKey) {
+  const element = document.getElementById(elementId);
+  if(!element) return;
+  element.innerHTML = '';
+  let i = 0;
+  if(timeoutRefObj[timeoutRefKey]) clearTimeout(timeoutRefObj[timeoutRefKey]);
+  
+  function type() {
+    if (i < text.length) {
+      element.innerHTML += text.charAt(i);
+      i++;
+      timeoutRefObj[timeoutRefKey] = setTimeout(type, speed + Math.random() * 20);
+    }
+  }
+  type();
 }
 
 function updateWorkbenchBoard(rxn) {
@@ -707,8 +772,9 @@ function updateWorkbenchBoard(rxn) {
   badge.style.color       = rxn.badgeColor;
   badge.style.borderColor = rxn.badgeColor;
   badge.style.background  = rxn.badgeColor + '22';
-  document.getElementById('eq-main').textContent = rxn.formula;
-  document.getElementById('eq-sub').textContent  = rxn.sub;
+  
+  typewriterEffect('eq-main', rxn.formula || '', 30, typewriterTimeouts, 'main');
+  typewriterEffect('eq-sub', rxn.sub || '', 20, typewriterTimeouts, 'sub');
 }
 
 /* ══════════════════════════════════════════════════
@@ -776,71 +842,85 @@ function clearVessel() {
 function buildBeakerSVG(layers) {
   const col = layers && layers.length ? layers[layers.length-1].color : 'rgba(200,240,255,0.1)';
   const fh  = layers ? Math.min(layers.length * 16, 54) : 0;
-  return `<svg id="vessel-svg" viewBox="0 0 100 100" width="90" height="90" xmlns="http://www.w3.org/2000/svg">
+  return `<svg id="vessel-svg" viewBox="0 0 100 100" width="90" height="90" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.4));">
     <defs>
       <linearGradient id="bkLiq" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:${col};stop-opacity:0.88"/>
-        <stop offset="100%" style="stop-color:${col};stop-opacity:0.62"/>
+        <stop offset="0%" style="stop-color:${col};stop-opacity:0.95"/>
+        <stop offset="100%" style="stop-color:${col};stop-opacity:0.75"/>
       </linearGradient>
       <linearGradient id="bkGlass" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" style="stop-color:rgba(255,255,255,0.38)"/>
-        <stop offset="50%" style="stop-color:rgba(255,255,255,0.04)"/>
-        <stop offset="100%" style="stop-color:rgba(255,255,255,0.18)"/>
+        <stop offset="0%" style="stop-color:rgba(255,255,255,0.6)"/>
+        <stop offset="15%" style="stop-color:rgba(255,255,255,0.1)"/>
+        <stop offset="85%" style="stop-color:rgba(255,255,255,0.05)"/>
+        <stop offset="100%" style="stop-color:rgba(255,255,255,0.4)"/>
       </linearGradient>
     </defs>
-    <path d="M22 ${90-fh} L22 82 L8 92 L92 92 L78 82 L78 ${90-fh} Z" fill="url(#bkLiq)"/>
-    <path d="M22 10 L22 82 L8 92 L92 92 L78 82 L78 10 Z" fill="rgba(200,240,255,0.10)" stroke="rgba(100,180,220,0.7)" stroke-width="2"/>
-    <path d="M22 10 L22 82 L8 92 L92 92 L78 82 L78 10 Z" fill="url(#bkGlass)"/>
-    <rect x="16" y="6" width="68" height="9" rx="3" fill="rgba(180,220,240,0.32)" stroke="rgba(100,180,220,0.7)" stroke-width="1.5"/>
-    <line x1="74" y1="28" x2="78" y2="28" stroke="rgba(100,180,220,0.55)" stroke-width="1"/>
-    <line x1="74" y1="44" x2="78" y2="44" stroke="rgba(100,180,220,0.55)" stroke-width="1"/>
-    <line x1="74" y1="60" x2="78" y2="60" stroke="rgba(100,180,220,0.55)" stroke-width="1"/>
-    <line x1="74" y1="76" x2="78" y2="76" stroke="rgba(100,180,220,0.55)" stroke-width="1"/>
+    <!-- Liquid -->
+    <path d="M22 ${90-fh} L22 82 Q22 92 32 92 L68 92 Q78 92 78 82 L78 ${90-fh} Z" fill="url(#bkLiq)"/>
+    <!-- Glass back -->
+    <path d="M22 10 L22 82 Q22 92 32 92 L68 92 Q78 92 78 82 L78 10 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(180,220,255,0.8)" stroke-width="2.5"/>
+    <path d="M22 10 L22 82 Q22 92 32 92 L68 92 Q78 92 78 82 L78 10 Z" fill="url(#bkGlass)"/>
+    <!-- Rim -->
+    <rect x="18" y="6" width="64" height="6" rx="3" fill="rgba(200,240,255,0.5)" stroke="rgba(180,220,255,0.9)" stroke-width="1.5"/>
+    <line x1="72" y1="28" x2="78" y2="28" stroke="rgba(200,240,255,0.7)" stroke-width="1.5"/>
+    <line x1="72" y1="44" x2="78" y2="44" stroke="rgba(200,240,255,0.7)" stroke-width="1.5"/>
+    <line x1="72" y1="60" x2="78" y2="60" stroke="rgba(200,240,255,0.7)" stroke-width="1.5"/>
+    <line x1="72" y1="76" x2="78" y2="76" stroke="rgba(200,240,255,0.7)" stroke-width="1.5"/>
+    <!-- Specular Highlight -->
+    <path d="M25 15 L25 80" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round" fill="none" opacity="0.8"/>
   </svg>`;
 }
 
 function buildTestTubeSVG(layers) {
   const col = layers && layers.length ? layers[layers.length-1].color : 'rgba(200,240,255,0.1)';
   const fh  = layers ? Math.min(layers.length * 14, 54) : 0;
-  return `<svg id="vessel-svg" viewBox="0 0 60 110" width="55" height="100" xmlns="http://www.w3.org/2000/svg">
+  return `<svg id="vessel-svg" viewBox="0 0 60 110" width="55" height="100" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 6px 8px rgba(0,0,0,0.3));">
     <defs>
       <linearGradient id="ttLiq" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:${col};stop-opacity:0.88"/>
-        <stop offset="100%" style="stop-color:${col};stop-opacity:0.62"/>
+        <stop offset="0%" style="stop-color:${col};stop-opacity:0.95"/>
+        <stop offset="100%" style="stop-color:${col};stop-opacity:0.75"/>
       </linearGradient>
       <linearGradient id="ttGlass" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" style="stop-color:rgba(255,255,255,0.38)"/>
-        <stop offset="50%" style="stop-color:rgba(255,255,255,0.04)"/>
+        <stop offset="0%" style="stop-color:rgba(255,255,255,0.6)"/>
+        <stop offset="15%" style="stop-color:rgba(255,255,255,0.1)"/>
+        <stop offset="85%" style="stop-color:rgba(255,255,255,0.05)"/>
+        <stop offset="100%" style="stop-color:rgba(255,255,255,0.4)"/>
       </linearGradient>
     </defs>
-    <path d="M14 ${100-fh} L14 94 Q30 106 46 94 L46 ${100-fh} Z" fill="url(#ttLiq)"/>
-    <path d="M14 6 L14 94 Q30 108 46 94 L46 6 Z" fill="rgba(200,240,255,0.10)" stroke="rgba(100,180,220,0.7)" stroke-width="2"/>
-    <path d="M14 6 L14 94 Q30 108 46 94 L46 6 Z" fill="url(#ttGlass)"/>
-    <rect x="10" y="3" width="40" height="8" rx="2" fill="rgba(180,220,240,0.32)" stroke="rgba(100,180,220,0.7)" stroke-width="1.5"/>
-    <line x1="43" y1="30" x2="46" y2="30" stroke="rgba(100,180,220,0.55)" stroke-width="0.8"/>
-    <line x1="43" y1="50" x2="46" y2="50" stroke="rgba(100,180,220,0.55)" stroke-width="0.8"/>
-    <line x1="43" y1="70" x2="46" y2="70" stroke="rgba(100,180,220,0.55)" stroke-width="0.8"/>
+    <path d="M14 ${100-fh} L14 94 Q14 108 30 108 Q46 108 46 94 L46 ${100-fh} Z" fill="url(#ttLiq)"/>
+    <path d="M14 6 L14 94 Q14 108 30 108 Q46 108 46 94 L46 6 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(180,220,255,0.8)" stroke-width="2.5"/>
+    <path d="M14 6 L14 94 Q14 108 30 108 Q46 108 46 94 L46 6 Z" fill="url(#ttGlass)"/>
+    <rect x="10" y="3" width="40" height="6" rx="2" fill="rgba(200,240,255,0.5)" stroke="rgba(180,220,255,0.9)" stroke-width="1.5"/>
+    <line x1="42" y1="30" x2="46" y2="30" stroke="rgba(200,240,255,0.7)" stroke-width="1.5"/>
+    <line x1="42" y1="50" x2="46" y2="50" stroke="rgba(200,240,255,0.7)" stroke-width="1.5"/>
+    <line x1="42" y1="70" x2="46" y2="70" stroke="rgba(200,240,255,0.7)" stroke-width="1.5"/>
+    <!-- Specular -->
+    <path d="M17 12 L17 90" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/>
   </svg>`;
 }
 
 function buildFlaskSVG(layers) {
   const col = layers && layers.length ? layers[layers.length-1].color : 'rgba(200,240,255,0.1)';
   const fh  = layers ? Math.min(layers.length * 12, 44) : 0;
-  return `<svg id="vessel-svg" viewBox="0 0 100 110" width="88" height="100" xmlns="http://www.w3.org/2000/svg">
+  return `<svg id="vessel-svg" viewBox="0 0 100 110" width="88" height="100" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.4));">
     <defs>
       <linearGradient id="flLiq" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:${col};stop-opacity:0.88"/>
-        <stop offset="100%" style="stop-color:${col};stop-opacity:0.62"/>
+        <stop offset="0%" style="stop-color:${col};stop-opacity:0.95"/>
+        <stop offset="100%" style="stop-color:${col};stop-opacity:0.75"/>
       </linearGradient>
       <linearGradient id="flGlass" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" style="stop-color:rgba(255,255,255,0.35)"/>
-        <stop offset="50%" style="stop-color:rgba(255,255,255,0.04)"/>
+        <stop offset="0%" style="stop-color:rgba(255,255,255,0.6)"/>
+        <stop offset="15%" style="stop-color:rgba(255,255,255,0.1)"/>
+        <stop offset="85%" style="stop-color:rgba(255,255,255,0.05)"/>
+        <stop offset="100%" style="stop-color:rgba(255,255,255,0.4)"/>
       </linearGradient>
     </defs>
-    <path d="M18 ${100-fh} Q12 ${100-fh+6} 10 96 Q50 108 90 96 Q88 ${100-fh+6} 82 ${100-fh} Z" fill="url(#flLiq)"/>
-    <path d="M38 10 L38 42 L10 96 Q50 110 90 96 L62 42 L62 10 Z" fill="rgba(200,240,255,0.10)" stroke="rgba(100,180,220,0.7)" stroke-width="2"/>
-    <path d="M38 10 L38 42 L10 96 Q50 110 90 96 L62 42 L62 10 Z" fill="url(#flGlass)"/>
-    <rect x="32" y="6" width="36" height="8" rx="2" fill="rgba(180,220,240,0.32)" stroke="rgba(100,180,220,0.7)" stroke-width="1.5"/>
+    <path d="M18 ${100-fh} Q12 ${100-fh+6} 10 96 Q10 110 50 110 Q90 110 90 96 Q88 ${100-fh+6} 82 ${100-fh} Z" fill="url(#flLiq)"/>
+    <path d="M38 10 L38 42 L10 96 Q10 110 50 110 Q90 110 90 96 L62 42 L62 10 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(180,220,255,0.8)" stroke-width="2.5"/>
+    <path d="M38 10 L38 42 L10 96 Q10 110 50 110 Q90 110 90 96 L62 42 L62 10 Z" fill="url(#flGlass)"/>
+    <rect x="32" y="6" width="36" height="6" rx="2" fill="rgba(200,240,255,0.5)" stroke="rgba(180,220,255,0.9)" stroke-width="1.5"/>
+    <!-- Specular Highlight -->
+    <path d="M41 14 L41 40 L16 88" stroke="rgba(255,255,255,0.7)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.8"/>
   </svg>`;
 }
 
@@ -855,33 +935,37 @@ function pourChemical() {
   if (selectedChemicals.length === 0) { showToast('⚠️ Select a chemical first!'); return; }
   if (!vesselType) { showToast('⚠️ Select a vessel (Beaker / Test Tube / Flask) first!'); return; }
 
+  // FIX: Only pour chemicals that haven't been poured yet
+  const toPour = selectedChemicals.filter(c => !pouredChemicals.find(p => p.id === c.id));
+  if (toPour.length === 0) { showToast('⚠️ Already poured these chemicals!'); return; }
+
   isPouring = true;
   document.getElementById('pour-chemical').disabled  = true;
   document.getElementById('start-reaction').disabled = true;
 
   let idx = 0;
   function pourNext() {
-    if (idx >= selectedChemicals.length) {
-      /* All selected chemicals have been poured — commit to state */
-      selectedChemicals.forEach(chem => {
-        if (!pouredChemicals.find(p => p.id === chem.id))
-          pouredChemicals.push({ ...chem });
+    if (idx >= toPour.length) {
+      /* All missing chemicals have been poured — commit to state */
+      toPour.forEach(chem => {
+        pouredChemicals.push({ ...chem });
       });
 
       updateBeakerContents();
-      /* BUG FIX 1: board/blackboard uses POURED chemicals */
+      /* Board responds to actually poured mixture */
+      hasReacted = false; // New mixture forces a new reaction prep state
       refreshBoardFromIds(pouredChemicals.map(c => c.id));
       renderVessel(vesselType, pouredChemicals);
 
       isPouring = false;
       document.getElementById('pour-chemical').disabled  = false;
       document.getElementById('start-reaction').disabled = false;
-      showToast('💧 Poured: ' + selectedChemicals.map(c => c.id).join(' + '));
+      showToast('💧 Poured: ' + toPour.map(c => c.id).join(' + '));
       setStatus('💧 Vessel contains: ' + pouredChemicals.map(c => c.id).join(' + ') + ' — click ▶ React!');
       updateStatusBar();
       return;
     }
-    animateSinglePour(selectedChemicals[idx++], pourNext);
+    animateSinglePour(toPour[idx++], pourNext);
   }
   pourNext();
 }
@@ -1161,7 +1245,7 @@ function updateBeakerContents() {
 ══════════════════════════════════════════════════ */
 function clearTable() {
   selectedChemicals = []; selectedTools = []; pouredChemicals = [];
-  vesselType = null; isReacting = false; isPouring = false;
+  vesselType = null; isReacting = false; isPouring = false; hasReacted = false;
 
   document.querySelectorAll('.bottle.selected').forEach(b => b.classList.remove('selected'));
   document.querySelectorAll('.tool-item.selected').forEach(t => t.classList.remove('selected'));
@@ -1204,14 +1288,14 @@ async function startReaction() {
 
   let rxn;
   try {
-    const res = await fetch('http://localhost:8000/react', {
+    const res = await fetch('http://localhost:8080/react', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chemicals: pourIds })
     });
     rxn = await res.json();
     if (rxn.reaction_occurred === false) {
-      rxn = DB.reactions['DEFAULT'];
+      rxn = DB.reactions['DEFAULT'] || createDefaultReaction(pourIds);
     }
   } catch(e) {
     console.error("Backend /react failed", e);
@@ -1244,12 +1328,22 @@ async function startReaction() {
   const bgCol     = (expData && expData.bgColor)      || rxn.bgColor      || '#cce5ff';
   const effect    = (expData && expData.effect)       || rxn.effect       || 'bubbles';
   const obsText   = (expData && expData.outcome)      || rxn.observation  || 'Reaction observed.';
-  const concl     = (expData && expData.conclusion)   || '';
+  const concl     = (expData && expData.conclusion)   || rxn.sub          || 'Conclusion: Stable mixture created.';
 
   setStatus('⚗️ Reaction in progress…');
   showToast('🔬 Reaction started!');
   rz.style.background  = bgCol + 'bb';
   rz.style.borderColor = bgCol;
+  
+  hasReacted = true;
+  
+  /* Instantly update Workbench Front Board with the final formula and Conclusion */
+  updateWorkbenchBoard({
+    badge: (expData && expData.badge) || rxn.badge || "COMPLETED",
+    badgeColor: (expData && expData.badgeColor) || rxn.badgeColor || "#a0f0c0",
+    formula: rxn.formula,
+    sub: concl
+  });
 
   /* Render animated reaction beaker */
   rz.innerHTML =
@@ -1309,23 +1403,25 @@ async function startReaction() {
 }
 
 function buildReactionBeakerSVG(liq, glow) {
-  return `<svg viewBox="0 0 92 82" width="92" height="82" xmlns="http://www.w3.org/2000/svg">
+  return `<svg viewBox="0 0 92 82" width="92" height="82" xmlns="http://www.w3.org/2000/svg" style="filter: drop-shadow(0px 8px 10px rgba(0,0,0,0.4));">
     <defs>
       <linearGradient id="rlq" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" style="stop-color:${liq};stop-opacity:0.9"/>
-        <stop offset="100%" style="stop-color:${liq};stop-opacity:0.6"/>
+        <stop offset="0%" style="stop-color:${liq};stop-opacity:0.95"/>
+        <stop offset="100%" style="stop-color:${liq};stop-opacity:0.75"/>
       </linearGradient>
       <linearGradient id="rgl" x1="0%" y1="0%" x2="100%" y2="0%">
-        <stop offset="0%" style="stop-color:rgba(255,255,255,0.4)"/>
-        <stop offset="50%" style="stop-color:rgba(255,255,255,0.05)"/>
-        <stop offset="100%" style="stop-color:rgba(255,255,255,0.2)"/>
+        <stop offset="0%" style="stop-color:rgba(255,255,255,0.6)"/>
+        <stop offset="15%" style="stop-color:rgba(255,255,255,0.1)"/>
+        <stop offset="85%" style="stop-color:rgba(255,255,255,0.05)"/>
+        <stop offset="100%" style="stop-color:rgba(255,255,255,0.4)"/>
       </linearGradient>
     </defs>
-    <ellipse cx="46" cy="76" rx="28" ry="6" fill="${glow}" opacity="0.3"/>
-    <path d="M22 8 L22 50 L8 72 L84 72 L70 50 L70 8 Z" fill="rgba(200,240,255,0.13)" stroke="rgba(100,180,220,0.75)" stroke-width="2"/>
-    <path d="M23 40 L23 50 L10 70 L82 70 L69 50 L69 40 Z" fill="url(#rlq)" opacity="0.88"/>
-    <path d="M22 8 L22 50 L8 72 L84 72 L70 50 L70 8 Z" fill="url(#rgl)"/>
-    <rect x="16" y="5" width="60" height="8" rx="3" fill="rgba(180,220,240,0.35)" stroke="rgba(100,180,220,0.7)" stroke-width="1.5"/>
+    <ellipse cx="46" cy="76" rx="28" ry="6" fill="${glow}" opacity="0.4"/>
+    <path d="M22 8 L22 50 Q22 72 46 72 Q70 72 70 50 L70 8 Z" fill="rgba(255,255,255,0.05)" stroke="rgba(180,220,255,0.8)" stroke-width="2.5"/>
+    <path d="M23 40 L23 50 Q23 70 46 70 Q69 70 69 50 L69 40 Z" fill="url(#rlq)"/>
+    <path d="M22 8 L22 50 Q22 72 46 72 Q70 72 70 50 L70 8 Z" fill="url(#rgl)"/>
+    <rect x="16" y="5" width="60" height="6" rx="3" fill="rgba(200,240,255,0.5)" stroke="rgba(180,220,255,0.9)" stroke-width="1.5"/>
+    <path d="M25 12 L25 60" stroke="rgba(255,255,255,0.7)" stroke-width="2.5" stroke-linecap="round" fill="none" opacity="0.8"/>
   </svg>`;
 }
 
@@ -1552,7 +1648,6 @@ function saveExperimentReport() {
   
   const rxn = window.lastReaction.rxn;
   const name = document.getElementById('badge-name').textContent || 'Student';
-  const std = document.getElementById('badge-std').textContent || 'Unknown';
   const roll = document.getElementById('badge-roll').textContent || 'Unknown';
   const date = new Date().toLocaleString();
   
@@ -1561,8 +1656,7 @@ VR CHEMISTRY LAB - EXPERIMENT REPORT
 ===========================================
 Date: ${date}
 Student Name: ${name}
-Class: ${std}
-${roll}
+Roll: ${roll}
 
 -------------------------------------------
 EXPERIMENT DETAILS
