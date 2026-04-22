@@ -656,9 +656,18 @@ function selectChemical(el) {
       if (empty) empty.style.display = 'none';
       const chip = document.createElement('div');
       chip.id        = 'chip-' + id;
-      chip.className = 'table-bottle';
-      chip.style.borderColor = capColor || color;
-      chip.innerHTML = `<div class="t-liquid" style="background:${color}"></div><div class="t-label">${id}</div>`;
+      chip.className = 'scd-chip';
+      chip.innerHTML = `
+        <div class="scd-mini-bottle">
+          <div class="scd-mini-cap" style="background:${capColor || color}"></div>
+          <div class="scd-mini-neck"></div>
+          <div class="scd-mini-body">
+            <div class="scd-mini-liquid" style="background:${color}"></div>
+            <div class="scd-mini-sheen"></div>
+          </div>
+        </div>
+        <div class="scd-chip-label">${id}</div>
+      `;
       strip.appendChild(chip);
     }
   }
@@ -718,10 +727,20 @@ function updateSelectedDisplay() {
   
   selectedChemicals.forEach(chem => {
     let b = document.createElement('div');
-    b.className = 'table-bottle';
+    b.id = 'chip-' + chem.id;
+    b.className = 'scd-chip';
     b.dataset.id = chem.id;
-    b.style.borderColor = chem.capColor || chem.color;
-    b.innerHTML = `<div class="t-liquid" style="background:${chem.color}"></div><div class="t-label">${chem.id}</div>`;
+    b.innerHTML = `
+      <div class="scd-mini-bottle">
+        <div class="scd-mini-cap" style="background:${chem.capColor || chem.color}"></div>
+        <div class="scd-mini-neck"></div>
+        <div class="scd-mini-body">
+          <div class="scd-mini-liquid" style="background:${chem.color}"></div>
+          <div class="scd-mini-sheen"></div>
+        </div>
+      </div>
+      <div class="scd-chip-label">${chem.id}</div>
+    `;
     c.appendChild(b);
   });
   updateStatusBar();
